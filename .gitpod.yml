@@ -1,0 +1,90 @@
+image:
+  file: .gitpod.Dockerfile
+
+ports:
+  # Apache server
+  - port: 8000
+    onOpen: open-preview
+    visibility: public
+  # PHPMyAdmin
+  - port: 8080
+    onOpen: notify
+    visibility: public
+  # MySQL server
+  - port: 3306
+    onOpen: ignore
+  # PHP CGI
+  - port: 9000
+    onOpen: ignore
+  # PHP xDebug
+  - port: 9003
+    onOpen: ignore
+    visibility: private
+    
+github:
+  prebuilds:
+    # enable for the default branch (defaults to true)
+    master: true
+    # enable for all branches in this repo (defaults to false)
+    branches: false
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: true
+    # enable for pull requests coming from forks (defaults to false)
+    pullRequestsFromForks: false
+    # add a check to pull requests (defaults to true)
+    addCheck: true
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
+    addComment: false
+    # add a "Review in Gitpod" button to the pull request's description (defaults to false)
+    addBadge: false
+
+gitConfig:
+  alias.st: status
+  alias.pr: pull --rebase
+
+vscode:
+  extensions:
+    # Enable PHP debug extension
+    - felixfbecker.php-debug
+    - eamodio.gitlens
+
+tasks:
+  - name: Init
+    before: |
+      export APACHE_DOCROOT_IN_REPO="www"
+      export NGINX_DOCROOT_IN_REPO="www"
+      export PMA_VERSION="RELEASE_5_1_3"
+      export PHP_VERSION=`php -v | head -n1 | cut -d' ' -f2 | cut -d. -f1,2`
+    init: |
+      # Install phpmyadmin
+      chmod a+rx .gp/install/pma.sh
+      .gp/install/pma.sh
+      # copy Apache config.
+      cp .gp/conf/apache/apache2.conf /etc/apache2/apache2.conf
+      # copy xdebug config
+      sudo cp .gp/conf/xdebug/20-xdebug.ini /etc/php/$PHP_VERSION/apache2/conf.d/20-xdebug.ini
+      # optional: use a custom MySQL config.
+      #sudo cp .gp/conf/mysql/my.cnf /etc/mysql/my.cnf
+      # optional: use a custom PHP config.
+      #cp .gp/conf/php/php.ini /etc/php/$PHP_VERSION/fpm/php.ini
+      #cp .gp/conf/php/php.ini /etc/php/$PHP_VERSION/cli/php.ini
+    command: |
+      until nc -z 127.0.0.1 3306; do echo "waiting for mysql ..."; sleep 1; done
+      cat $GITPOD_REPO_ROOT/data/mysql/*.sql | mysql -u root
+      cat /var/www/phpmyadmin/sql/create_tables.sql | mysql -u root
+      apachectl start
+  - name: Apache
+    command: |
+      touch /var/log/apache2/error.log
+      touch /var/log/apache2/access.log
+      multitail /var/log/apache2/error.log -I /var/log/apache2/access.log
+  - name: MySQL
+    command: |
+      until nc -z 127.0.0.1 3306; do echo "waiting for mysql ..."; sleep 1; done
+      multitail /var/log/mysql/error.log -I /var/log/mysql/mysql.log
+  - name: xDebug
+    command: |
+      sudo touch /var/log/xdebug.log
+      sudo chown gitpod:gitpod /var/log/xdebug.log
+      tail -f /var/log/xdebug.log
+  - name: Bash
