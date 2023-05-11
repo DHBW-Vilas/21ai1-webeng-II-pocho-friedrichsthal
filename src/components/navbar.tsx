@@ -7,10 +7,26 @@ export default function Navbar() {
   const { user, isSignedIn } = useUser();
 
   return (
-    <nav className="sticky top-0 flex w-full items-center  justify-between bg-gradient-to-b from-[#2e026d] to-[#15162c] p-4">
+    <nav className="sticky top-0 flex h-20 w-full items-center justify-between bg-gradient-to-b from-[#2e026d] to-[#15162c] p-4">
       <Link className="text-2xl font-bold text-white" href="/">
-        <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+        <Image
+          className="h-14 w-14"
+          src="/favicon.ico"
+          width={50}
+          height={50}
+          alt="Logo"
+        />
       </Link>
+      <div className="flex">
+        <Link className="text-slate-100" href="/">
+          Home
+        </Link>
+        {isSignedIn && (
+          <Link className="ml-4 text-slate-100" href="/events">
+            Events
+          </Link>
+        )}
+      </div>
       <div className="flex items-center">
         {!isSignedIn && (
           <span className="mr-4 text-white">
@@ -18,15 +34,15 @@ export default function Navbar() {
           </span>
         )}
         {!!isSignedIn && (
-          <div className="flex items-center">
+          <div className="relative">
             <img
-              className="mr-4 h-10 w-10 rounded-full"
-              src={user.profileImageUrl}
-              alt={user.fullName?.toString()}
+              className="h-10 w-10 rounded-full"
+              src={user?.profileImageUrl}
+              alt="Profile Image"
             />
-            <span className="mr-4 text-white">
+            <div className="absolute right-0 top-0">
               <SignOutButton />
-            </span>
+            </div>
           </div>
         )}
       </div>
