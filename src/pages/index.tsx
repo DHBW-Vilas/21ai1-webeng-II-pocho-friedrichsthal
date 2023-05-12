@@ -1,16 +1,8 @@
-import { useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Navbar from "~/components/navbar";
 
-import { api } from "~/utils/api";
-
 const Home: NextPage = () => {
-  const hello = api.event.getAll.useQuery();
-  console.log(hello);
-
-  const { user, isSignedIn } = useUser();
-
   return (
     <>
       <Head>
