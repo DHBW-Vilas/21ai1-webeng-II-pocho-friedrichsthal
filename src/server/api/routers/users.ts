@@ -90,6 +90,10 @@ export const userRouter = createTRPCRouter({
       z.object({
         displayName: z.string(),
         primaryInstrument: z.nativeEnum(Instrument),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        email: z.string().optional(),
+        
       })
     )
     .mutation(async ({ ctx, input }) => {

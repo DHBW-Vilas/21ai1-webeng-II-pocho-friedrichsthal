@@ -66,6 +66,8 @@ const RegisterPage: NextPage = () => {
                 })
               }
             </select>
+
+            <input type="submit" value="Submit" />
           </form>
         </div>
       );
