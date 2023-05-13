@@ -30,7 +30,7 @@ export default function Navbar() {
       <div className="flex items-center">
         {!isSignedIn && (
           <span className="mr-4 text-white">
-            <SignInButton redirectUrl="/events" />
+            <SignInButton redirectUrl="/userSync" />
           </span>
         )}
         {!!isSignedIn && (
