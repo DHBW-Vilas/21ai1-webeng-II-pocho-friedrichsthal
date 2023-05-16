@@ -19,7 +19,7 @@ const UserSync: NextPage = () => {
       } else {
         // if yes, redirect to user page
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        router.push("/user/" + user.id);
+        router.push("/user/");
       }
     }
   }

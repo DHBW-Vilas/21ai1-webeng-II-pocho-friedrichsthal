@@ -93,16 +93,69 @@ export const userRouter = createTRPCRouter({
         firstName: z.string().optional(),
         lastName: z.string().optional(),
         email: z.string().optional(),
-        
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!input.displayName) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "displayName is required",
+        });
+      }
+      if (!input.primaryInstrument) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "primaryInstrument is required",
+        });
+      }
+
+      //check if user already exists (display name)
+      const existingUserName = await ctx.prisma.user.findUnique({
+        where: {
+          displayName: input.displayName,
+        },
+      });
+      if (existingUserName) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User with this name already exists",
+        });
+      }
+
+      //check if user already exists (clerkId)
+      const existingUserClerkId = await ctx.prisma.user.findUnique({
+        where: {
+          clerkId: ctx.userId,
+        },
+      });
+      if (existingUserClerkId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User with this clerkId already exists",
+        });
+      }
+
+      const existingUserEmail = await ctx.prisma.user.findUnique({
+        where: {
+          email: input.email,
+        },
+      });
+      if (existingUserEmail) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User with this email already exists",
+        });
+      }
+
       return ctx.prisma.user.create({
         data: {
           displayName: input.displayName,
           clerkId: ctx.userId,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           primaryInstrument: input.primaryInstrument,
+          firstName: input.firstName || "",
+          lastName: input.lastName || "",
+          email: input.email || "",
         },
       });
     }),
