@@ -93,6 +93,7 @@ const RegisterPage: NextPage = () => {
                   displayname: displayname,
                   email: email,
                   primaryInstrument: instrument as Instrument,
+                  imageUrl: user.profileImageUrl,
                 };
 
                 if (name == "") {
@@ -120,6 +121,7 @@ const RegisterPage: NextPage = () => {
                   lastName: userObj.name,
                   email: userObj.email,
                   primaryInstrument: userObj.primaryInstrument,
+                  imageUrl: user.profileImageUrl,
                 });
               }}
             >
