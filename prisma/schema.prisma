@@ -42,6 +42,7 @@ model User {
     lastName            String?
     email               String?     @unique
     imageUrl            String?
+    startedAt           DateTime?
     primaryInstrument   Instrument
     secondaryInstrument Instrument?
     role                UserRole    @default(GUEST)

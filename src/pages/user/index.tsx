@@ -9,6 +9,7 @@ import { Card } from "~/components/ui/card";
 import Image from "next/image";
 import { Tag } from "~/components/tag";
 import { EditButton } from "@/src/components/buttons";
+import { Skeleton } from "@/src/components/ui/skeleton";
 
 const UserDisplay = (user: User) => {
   const groupsQuery = api.user.getGroupsOfUser.useQuery({
@@ -19,7 +20,7 @@ const UserDisplay = (user: User) => {
     throw groupsQuery.error;
   }
   if (!groupsQuery.isSuccess) {
-    return <div>Loading...</div>;
+    return <Skeleton className="h-24 w-96" />;
   }
 
   if (!groupsQuery.data) {
@@ -29,18 +30,25 @@ const UserDisplay = (user: User) => {
   const groups = groupsQuery.data;
 
   let role = user.role.toString().toLocaleLowerCase();
-  let primaryInstrument = user.primaryInstrument.toString().toLocaleLowerCase();
+  const primaryInstrument = user.primaryInstrument
+    .toString()
+    .toLocaleLowerCase();
 
   role = role.replace(/(\w)(\w*)/g, function (g0, g1: string, g2: string) {
     return g1.toUpperCase() + g2.toLowerCase();
   });
 
-  primaryInstrument = primaryInstrument.replace(
+  const instrument = primaryInstrument.replace(
     /(\w)(\w*)/g,
     function (g0, g1: string, g2: string) {
       return g1.toUpperCase() + g2.toLowerCase();
     }
   );
+
+  let startedAt = null;
+  if (user.startedAt) {
+    startedAt = new Date(user.startedAt as Date);
+  }
 
   return (
     <div className="relative">
@@ -66,6 +74,7 @@ const UserDisplay = (user: User) => {
               ? user.firstName.toString() + " " + user.lastName.toString()
               : ""}
           </span>
+
           <div>
             <span className=" font-thin text-slate-400">
               {"@" + user.displayName}
@@ -82,6 +91,20 @@ const UserDisplay = (user: User) => {
               <span className="rounded-md bg-slate-900 px-2 py-1 text-slate-100">
                 {role}
               </span>
+            )}
+          </div>
+          <div className=" py-2">
+            <span className="font-thin text-slate-400">{instrument}</span>
+            {startedAt ? (
+              <span className="font-thin text-slate-400">
+                {" since "}
+                {startedAt.toLocaleString("default", {
+                  month: "long",
+                })}{" "}
+                {startedAt.getUTCFullYear()}
+              </span>
+            ) : (
+              <span></span>
             )}
           </div>
 
