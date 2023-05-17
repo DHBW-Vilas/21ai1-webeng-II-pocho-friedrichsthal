@@ -2,9 +2,10 @@ import { api } from "~/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import { type NextPage } from "next";
+import { LoadingPage } from "~/components/loading";
 
 const UserSync: NextPage = () => {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const router = useRouter();
 
   if (isSignedIn) {
@@ -21,6 +22,12 @@ const UserSync: NextPage = () => {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         router.push("/user/");
       }
+    } else {
+      return (
+        <div className="bg-slate-900">
+          <LoadingPage />
+        </div>
+      );
     }
   }
 
