@@ -67,6 +67,39 @@ export const userRouter = createTRPCRouter({
   getAllGroups: loggedinProcedure.query(async ({ ctx }) => {
     return ctx.prisma.userGroup.findMany();
   }),
+  getGroupsOfUser: memberProcedure
+    .input(z.object({ userId: z.string().optional() }))
+    .query(async ({ input, ctx }) => {
+      let user;
+      if (!input.userId) {
+        user = await ctx.prisma.user.findUnique({
+          where: {
+            clerkId: ctx.userId,
+          },
+        });
+      } else {
+        user = await ctx.prisma.user.findUnique({
+          where: {
+            clerkId: input.userId,
+          },
+        });
+      }
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      return ctx.prisma.userGroup.findMany({
+        where: {
+          users: {
+            some: {
+              clerkId: user.clerkId,
+            },
+          },
+        },
+      });
+    }),
+
   getAllOfGroup: memberProcedure
     .input(z.object({ groupId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -81,7 +114,11 @@ export const userRouter = createTRPCRouter({
 
       return ctx.prisma.user.findMany({
         where: {
-          UserGroup: group,
+          UserGroups: {
+            some: {
+              id: input.groupId,
+            },
+          },
         },
       });
     }),
@@ -93,6 +130,7 @@ export const userRouter = createTRPCRouter({
         firstName: z.string().optional(),
         lastName: z.string().optional(),
         email: z.string().optional(),
+        imageUrl: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -156,6 +194,7 @@ export const userRouter = createTRPCRouter({
           firstName: input.firstName || "",
           lastName: input.lastName || "",
           email: input.email || "",
+          imageUrl: input.imageUrl,
         },
       });
     }),

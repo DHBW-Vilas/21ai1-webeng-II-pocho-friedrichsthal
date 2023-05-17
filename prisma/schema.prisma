@@ -45,12 +45,11 @@ model User {
     primaryInstrument   Instrument
     secondaryInstrument Instrument?
     role                UserRole    @default(GUEST)
-    UserGroup           UserGroup?  @relation(fields: [userGroupId], references: [id])
-    userGroupId         String?
+    UserGroups          UserGroup[]
 
-    @@index([userGroupId])
     @@index([displayName])
     @@index([firstName])
+    @@index([primaryInstrument])
 }
 
 model Tag {
