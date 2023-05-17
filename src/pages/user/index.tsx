@@ -92,7 +92,7 @@ const AdminDashboard = () => {
           <div className="flex justify-center">
             <div className="flex flex-col justify-center">
               <h2 className="text-center text-2xl">Users</h2>
-              <div className="flex flex-col justify-center">
+              <div className="grid grid-cols-3 gap-6">
                 {users.map((user) => (
                   <UserDisplay key={user.clerkId} {...user} />
                 ))}
