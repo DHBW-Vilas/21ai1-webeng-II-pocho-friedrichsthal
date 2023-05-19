@@ -3,7 +3,7 @@ export const EditButton = ({ ...props }) => {
   return (
     <button
       {...props}
-      className="absolute right-2 top-2 z-10  h-8 w-8  rounded-md border-2  border-slate-800 hover:bg-slate-200 "
+      className="absolute right-2 top-2 z-10  h-8 w-8  rounded-md"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -11,7 +11,7 @@ export const EditButton = ({ ...props }) => {
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
-        className="m-auto h-6 w-6"
+        className="m-auto h-6 w-6 hover:h-7 hover:w-7"
       >
         <path
           strokeLinecap="round"
