@@ -40,18 +40,20 @@ export const userRouter = createTRPCRouter({
       message: "Insufficient permissions",
     });
   }),
-  getOne: memberProcedure.query(async ({ ctx }) => {
-    const user = await ctx.prisma.user.findUnique({
-      where: {
-        clerkId: ctx.userId,
-      },
-    });
-    if (!user) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-    }
+  getOne: memberProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          clerkId: input.userId,
+        },
+      });
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
 
-    return user;
-  }),
+      return user;
+    }),
   getSelf: loggedinProcedure.query(async ({ ctx }) => {
     const user = await ctx.prisma.user.findUnique({
       where: {
@@ -68,7 +70,7 @@ export const userRouter = createTRPCRouter({
   updateUser: adminProcedure
     .input(
       z.object({
-        userId: z.string(),
+        clerkId: z.string(),
         displayName: z.string().optional(),
         primaryInstrument: z.nativeEnum(Instrument).optional(),
         secondaryInstrument: z.nativeEnum(Instrument).optional(),
@@ -82,7 +84,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.prisma.user.findUnique({
         where: {
-          clerkId: input.userId,
+          clerkId: input.clerkId,
         },
       });
 
@@ -97,7 +99,7 @@ export const userRouter = createTRPCRouter({
             displayName: input.displayName,
           },
         });
-        if (existingUserName && existingUserName.clerkId !== input.userId) {
+        if (existingUserName && existingUserName.clerkId !== input.clerkId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "User with displayName already exists",
@@ -106,13 +108,14 @@ export const userRouter = createTRPCRouter({
       }
 
       //check if user already exists (email)
-      if (input.email && input.email !== user.email) {
+      if (input.email) {
         const existingUserEmail = await ctx.prisma.user.findUnique({
           where: {
             email: input.email,
           },
         });
-        if (existingUserEmail) {
+
+        if (existingUserEmail && existingUserEmail.clerkId !== input.clerkId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "User with email already exists",
@@ -122,7 +125,7 @@ export const userRouter = createTRPCRouter({
 
       const updatedUser = await ctx.prisma.user.update({
         where: {
-          clerkId: input.userId,
+          clerkId: input.clerkId,
         },
         data: {
           displayName: input.displayName,
@@ -133,6 +136,7 @@ export const userRouter = createTRPCRouter({
           firstName: input.firstName || user.firstName || null,
           lastName: input.lastName || user.lastName || null,
           email: input.email || user.email || null,
+          startedAt: input.startedAt || user.startedAt || null,
         },
       });
 
@@ -197,6 +201,121 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
+  addUserToGroup: adminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        userId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const group = await ctx.prisma.userGroup.findUnique({
+        where: {
+          id: input.groupId,
+        },
+      });
+      if (!group) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
+      }
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          clerkId: input.userId,
+        },
+      });
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      //check if user is already in group
+      const existingUserGroup = await ctx.prisma.userGroup.findFirst({
+        where: {
+          id: input.groupId,
+          users: {
+            some: {
+              clerkId: input.userId,
+            },
+          },
+        },
+      });
+      if (existingUserGroup) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User is already in group",
+        });
+      }
+
+      return ctx.prisma.userGroup.update({
+        where: {
+          id: input.groupId,
+        },
+        data: {
+          users: {
+            connect: {
+              clerkId: input.userId,
+            },
+          },
+        },
+      });
+    }),
+  removeUserFromGroup: adminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        userId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const group = await ctx.prisma.userGroup.findUnique({
+        where: {
+          id: input.groupId,
+        },
+      });
+      if (!group) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
+      }
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          clerkId: input.userId,
+        },
+      });
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      //check if user is already in group
+      const existingUserGroup = await ctx.prisma.userGroup.findFirst({
+        where: {
+          id: input.groupId,
+          users: {
+            some: {
+              clerkId: input.userId,
+            },
+          },
+        },
+      });
+      if (!existingUserGroup) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User is not in group",
+        });
+      }
+
+      return ctx.prisma.userGroup.update({
+        where: {
+          id: input.groupId,
+        },
+        data: {
+          users: {
+            disconnect: {
+              clerkId: input.userId,
+            },
+          },
+        },
+      });
+    }),
+
   createUser: loggedinProcedure
     .input(
       z.object({

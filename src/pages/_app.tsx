@@ -8,6 +8,7 @@ import {
   SignedOut,
   RedirectToSignIn,
 } from "@clerk/nextjs";
+import { Toaster } from "react-hot-toast";
 
 const publicPages = [
   "/",
@@ -34,13 +35,18 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <ClerkProvider {...pageProps}>
       {isPublicPage ? (
-        <Component {...pageProps} />
+        <>
+          <Toaster />
+          <Component {...pageProps} />
+        </>
       ) : (
         <>
           <SignedIn>
+            <Toaster />
             <Component {...pageProps} />
           </SignedIn>
           <SignedOut>
+            <Toaster />
             <RedirectToSignIn />
           </SignedOut>
         </>

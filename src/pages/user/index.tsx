@@ -8,28 +8,9 @@ import Image from "next/image";
 import { Tag } from "~/components/tag";
 import { EditButton } from "@/src/components/buttons";
 import { Skeleton } from "@/src/components/ui/skeleton";
-import { Instrument, type UserRole } from "@prisma/client";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/src/components/ui/sheet";
-import { Label } from "@/src/components/ui/label";
-import { Input } from "@/src/components/ui/input";
 import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select";
 import { useRouter } from "next/router";
-import { useToast } from "@/src/components/ui/use-toast";
-import { Button } from "@/src/components/ui/button";
+import { toast } from "react-hot-toast";
 
 const UserCard = (user: User) => {
   const updateUserMutation = api.user.updateUser.useMutation();
@@ -37,24 +18,9 @@ const UserCard = (user: User) => {
 
   const [userState, setUser] = useState(user);
 
-  const [displayName, setDisplayName] = useState(user.displayName);
-  const [lastName, setLastName] = useState(user.lastName);
-  const [firstName, setFirstName] = useState(user.firstName);
-  const [email, setEmail] = useState(user.email);
-  const [newRole, setRole] = useState(user.role);
-  const [newPrimaryInstrument, setPrimaryInstrument] = useState(
-    user.primaryInstrument
-  );
-  const [newSecondaryInstrument, setSecondaryInstrument] = useState(
-    user.secondaryInstrument
-  );
-  const [newStartedAt, setStartedAt] = useState(user.startedAt as Date);
-
   const groupsQuery = api.user.getGroupsOfUser.useQuery({
-    userId: user.clerkId,
+    userId: userState.clerkId,
   });
-
-  const { toast } = useToast();
 
   if (groupsQuery.isError) {
     throw groupsQuery.error;
@@ -68,17 +34,10 @@ const UserCard = (user: User) => {
   }
 
   if (updateUserMutation.isError) {
-    toast({
-      title: "Error",
-      description: updateUserMutation.error.message,
-    });
+    toast.error("Error updating user " + updateUserMutation.error.message);
   }
   if (updateUserMutation.isSuccess) {
-    toast({
-      title: "Success",
-      description: "User updated successfully",
-    });
-
+    toast.success("User updated successfully");
     setUser(updateUserMutation.data);
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -118,207 +77,18 @@ const UserCard = (user: User) => {
 
   let startedAt = null;
   if (userState.startedAt) {
-    startedAt = new Date(userState.startedAt as Date);
+    startedAt = new Date(userState.startedAt);
   }
 
   return (
     <div className="relative">
-      <Sheet>
-        <SheetTrigger className="absolute right-0 top-0">
-          <EditButton />
-        </SheetTrigger>
-        <SheetContent position={"bottom"} size={"content"}>
-          <SheetTitle>Edit Profile</SheetTitle>
-          <div className=" py-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="displayname">Display Name</Label>
-                <Input
-                  id="displayname"
-                  defaultValue={displayName}
-                  onChange={(e) => {
-                    setDisplayName(e.target.value);
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="firstname">First Name</Label>
-                <Input
-                  id="firstname"
-                  defaultValue={firstName ? firstName : ""}
-                  onChange={(e) => {
-                    setFirstName(e.target.value);
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastname">Last Name</Label>
-                <Input
-                  id="lastname"
-                  defaultValue={lastName ? lastName : ""}
-                  onChange={(e) => {
-                    setLastName(e.target.value);
-                  }}
-                />
-              </div>
+      <EditButton
+        onClick={() => {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          router.push(`/user/update/${userState.clerkId}`);
+        }}
+      />
 
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  defaultValue={email ? email : ""}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                  }}
-                />
-              </div>
-              <div>
-                <Label>Role</Label>
-                <Select
-                  disabled={userState.role === "ADMIN"}
-                  onValueChange={(value) => {
-                    setRole(value.toUpperCase() as UserRole);
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={role} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Role</SelectLabel>
-                      <SelectItem
-                        value="Guest"
-                        defaultChecked={newRole === "GUEST"}
-                      >
-                        Guest
-                      </SelectItem>
-                      <SelectItem
-                        value="Member"
-                        defaultChecked={newRole === "MEMBER"}
-                      >
-                        Member
-                      </SelectItem>
-                      <SelectItem
-                        value="Admin"
-                        defaultChecked={newRole === "ADMIN"}
-                      >
-                        Admin
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Primary Instrument</Label>
-                <Select
-                  onValueChange={(instrument) => {
-                    setPrimaryInstrument(instrument as Instrument);
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={instrument} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {Object.keys(Instrument).map((instrument) => {
-                        return (
-                          <SelectItem
-                            key={instrument}
-                            value={instrument}
-                            defaultChecked={newPrimaryInstrument === instrument}
-                          >
-                            {instrument.replace(
-                              /(\w)(\w*)/g,
-                              function (g0, g1: string, g2: string) {
-                                return g1.toUpperCase() + g2.toLowerCase();
-                              }
-                            )}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Secondary Instrument</Label>
-                <Select
-                  onValueChange={(instrument) => {
-                    setSecondaryInstrument(instrument as Instrument);
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={
-                        secondaryInstrument || "Select secondary instrument"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {Object.keys(Instrument).map((instrument) => {
-                        return (
-                          <SelectItem
-                            key={instrument}
-                            value={instrument}
-                            defaultChecked={
-                              newSecondaryInstrument === instrument
-                            }
-                            disabled={instrument === newPrimaryInstrument}
-                          >
-                            {instrument.replace(
-                              /(\w)(\w*)/g,
-                              function (g0, g1: string, g2: string) {
-                                return g1.toUpperCase() + g2.toLowerCase();
-                              }
-                            )}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="startedAt">Started At</Label>
-                <Input
-                  id="startedAt"
-                  type="date"
-                  defaultValue={
-                    startedAt ? startedAt.toISOString().split("T")[0] : ""
-                  }
-                  onChange={(e) => {
-                    setStartedAt(new Date(e.target.value));
-                  }}
-                />
-              </div>
-              <SheetTrigger className="col-span-3">
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    updateUserMutation.mutate({
-                      userId: userState.clerkId,
-                      displayName: displayName,
-                      firstName: firstName ? firstName : undefined,
-                      lastName: lastName ? lastName : undefined,
-                      email: email ? email : undefined,
-                      role: newRole.toUpperCase() as UserRole,
-                      primaryInstrument:
-                        newPrimaryInstrument.toUpperCase() as Instrument,
-                      secondaryInstrument: newSecondaryInstrument
-                        ? (newSecondaryInstrument.toUpperCase() as Instrument)
-                        : undefined,
-                      startedAt: newStartedAt ? newStartedAt : undefined,
-                    });
-                  }}
-                >
-                  Update
-                </Button>
-              </SheetTrigger>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
       <Card className="relative flex h-36 w-96 justify-around gap-6 p-2 align-middle">
         <Image
           src={userState.imageUrl ? userState.imageUrl : "/default-profile.png"}
