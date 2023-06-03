@@ -2,22 +2,63 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-  relationMode = "prisma"
+    provider     = "mysql"
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
 }
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
+model UserGroup {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    name        String
+    description String?  @db.VarChar(2500)
+    users       User[]
+}
+
+enum UserRole {
+    ADMIN
+    MEMBER
+    GUEST
+}
+
+enum Instrument {
+    TRUMPET
+    TROMBONE
+    TUBA
+    EUPHONIUM
+    FLUGELHORN
+    CORNET
+}
+
+model User {
+    clerkId             String      @id @unique
+    displayName         String      @unique
+    firstName           String?
+    lastName            String?
+    email               String?     @unique
+    imageUrl            String?
+    startedAt           DateTime?
+    primaryInstrument   Instrument
+    secondaryInstrument Instrument?
+    role                UserRole    @default(GUEST)
+    UserGroups          UserGroup[]
+
+    @@index([displayName])
+    @@index([firstName])
+    @@index([primaryInstrument])
+}
 
 model Tag {
-    id          String    @id @default(cuid())
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-    name        String
-    events      Event[]
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    name      String
+    events    Event[]
 }
 
 model Event {
@@ -25,7 +66,7 @@ model Event {
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
     title       String
-    description String?
+    description String?   @db.VarChar(2500)
     start       DateTime
     end         DateTime
     meet        DateTime?

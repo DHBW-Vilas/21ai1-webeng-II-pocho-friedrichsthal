@@ -2,6 +2,14 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
+import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 export default function Navbar() {
   const { user, isSignedIn } = useUser();
@@ -30,19 +38,32 @@ export default function Navbar() {
       <div className="flex items-center">
         {!isSignedIn && (
           <span className="mr-4 text-white">
-            <SignInButton redirectUrl="/events" />
+            <SignInButton redirectUrl="/userSync" />
           </span>
         )}
         {!!isSignedIn && (
           <div className="relative">
-            <img
-              className="h-10 w-10 rounded-full"
-              src={user?.profileImageUrl}
-              alt="Profile Image"
-            />
-            <div className="absolute right-0 top-0">
-              <SignOutButton />
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Image
+                  className="h-10 w-10 rounded-full"
+                  src={user.profileImageUrl}
+                  alt="Profile Image"
+                  width={40}
+                  height={40}
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <Link href={"/user"}>
+                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem>
+                  <SignOutButton />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>
