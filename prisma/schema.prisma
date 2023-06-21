@@ -12,12 +12,14 @@ generator client {
 }
 
 model UserGroup {
-    id          String   @id @default(cuid())
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    name        String
-    description String?  @db.VarChar(2500)
-    users       User[]
+    id            String   @id @default(cuid())
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+    name          String
+    description   String?  @db.VarChar(2500)
+    visibleEvents Event[]  @relation("eventVisibleTo")
+    users         User[]
+    events        Event[]
 }
 
 enum UserRole {
@@ -35,48 +37,152 @@ enum Instrument {
     CORNET
 }
 
+enum EventUserStatus {
+    ATTENDING
+    NOT_ATTENDING
+    MAYBE
+    NOT_RESPONDED
+}
+
+enum EventUserRelation {
+    AUTHOR
+    PARTICIPANT
+}
+
+enum NotificationType {
+    EVENT
+    POST
+}
+
 model User {
-    clerkId             String      @id @unique
-    displayName         String      @unique
+    clerkId             String             @id @unique
+    displayName         String             @unique
     firstName           String?
     lastName            String?
-    email               String?     @unique
+    email               String?            @unique
     imageUrl            String?
     startedAt           DateTime?
     primaryInstrument   Instrument
     secondaryInstrument Instrument?
-    role                UserRole    @default(GUEST)
+    role                UserRole           @default(GUEST)
     UserGroups          UserGroup[]
+    createdPosts        Post[]
+    relatedPosts        Post[]             @relation("relatedPosts")
+    events              EventUser[]
+    notifications       UserNotification[]
 
     @@index([displayName])
     @@index([firstName])
     @@index([primaryInstrument])
 }
 
-model Tag {
+model Category {
     id        String   @id @default(cuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    name      String
+    name      String   @unique
     events    Event[]
+    posts     Post[]
+}
+
+model Composer {
+    id          String       @id @default(cuid())
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    name        String       @unique
+    musicSheets MusicSheet[]
+}
+
+model MusicSheet {
+    id        String     @id @default(cuid())
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    name      String
+    book      Book?      @relation(fields: [bookId], references: [id])
+    page      Int?
+    composer  Composer[]
+    url       String?
+    events    Event[]
+    bookId    String?
+}
+
+model Book {
+    id          String       @id @default(cuid())
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    name        String       @unique
+    musicSheets MusicSheet[]
+    pages       Int?
+}
+
+model Post {
+    id                String             @id @default(cuid())
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
+    title             String
+    content           String             @db.VarChar(10000)
+    visible           Boolean            @default(false)
+    needsReview       Boolean            @default(true)
+    approved          Boolean            @default(false)
+    lowestVisibleRole UserRole
+    postImageUrl      String
+    categories        Category[]
+    relatedEvents     Event[]
+    userClerkId       String
+    author            User               @relation(fields: [userClerkId], references: [clerkId])
+    mentionedUsers    User[]             @relation("relatedPosts")
+    UserNotification  UserNotification[]
+}
+
+model EventUser {
+    id          String            @id @default(cuid())
+    createdAt   DateTime          @default(now())
+    updatedAt   DateTime          @updatedAt
+    optional    Boolean           @default(false)
+    status      EventUserStatus   @default(NOT_RESPONDED)
+    relation    EventUserRelation @default(PARTICIPANT)
+    event       Event             @relation(fields: [eventId], references: [id])
+    user        User              @relation(fields: [userClerkId], references: [clerkId])
+    eventId     String
+    userClerkId String
+}
+
+model UserNotification {
+    id           String           @id @default(cuid())
+    createdAt    DateTime         @default(now())
+    updatedAt    DateTime         @updatedAt
+    title        String
+    content      String
+    users        User[]
+    type         NotificationType
+    link         String?
+    relatedEvent Event?           @relation(fields: [eventId], references: [id])
+    eventId      String?          @unique
+    relatedPost  Post?            @relation(fields: [postId], references: [id])
+    postId       String?          @unique
 }
 
 model Event {
-    id          String    @id @default(cuid())
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-    title       String
-    description String?   @db.VarChar(2500)
-    start       DateTime
-    end         DateTime
-    meet        DateTime?
-    location    String?
-    link        String?
-    image       String?
-    tags        Tag[]
-    authorId    String
-
-    @@index([authorId])
-    @@index([start])
-    @@index([location])
+    id                String             @id @default(cuid())
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
+    visible           Boolean            @default(true)
+    visibleToGroups   UserGroup[]        @relation("eventVisibleTo")
+    lowestVisibleRole UserRole
+    needsReview       Boolean            @default(false)
+    approved          Boolean            @default(false)
+    title             String
+    startAt           DateTime
+    endAt             DateTime
+    notifyAt          DateTime?
+    meetAt            DateTime?
+    location          String?
+    description       String?            @db.VarChar(2500)
+    userGroups        UserGroup[]
+    musicSheets       MusicSheet[]
+    relatedPosts      Post[]
+    category          Category?          @relation(fields: [categoryId], references: [id])
+    users             EventUser[]
+    UserNotification  UserNotification[]
+    categoryId        String?
 }

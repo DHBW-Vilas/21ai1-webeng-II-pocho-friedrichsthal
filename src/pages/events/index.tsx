@@ -1,164 +1,420 @@
-import { useUser } from "@clerk/nextjs";
+import { LoadingPage } from "@/src/components/loading";
+import { api } from "@/src/utils/api";
 import { type NextPage } from "next";
-import Head from "next/head";
-import { Input } from "~/components/ui/input";
-import Navbar from "~/components/navbar";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { useState } from "react";
+import { toast } from "react-hot-toast";
+import Navbar from "@/src/components/navbar";
+import { type Event } from "@prisma/client";
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "~/components/ui/sheet";
+  type ColumnDef,
+  getCoreRowModel,
+  useReactTable,
+  flexRender,
+} from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
+import { UserNameHover } from "@/src/components/usernameHover";
+import { Tag } from "@/src/components/tag";
+import { Button } from "@/src/components/ui/button";
+import { MoreHorizontal, PlusIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/src/components/ui/dialog";
+import { CreateEventForm } from "./create";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/src/components/ui/dropdown-menu";
+import { useState } from "react";
+import { UpdateEventForm } from "./[eventId]/update";
 
-import { api } from "~/utils/api";
-import { ScrollArea } from "~/components/ui/scroll-area";
-
-const CreateEventWizard = () => {
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().split(":", 2).join(":")
-  );
-  //add 1 hour to start date
-  const tmp = new Date(startDate);
-  tmp.setHours(tmp.getHours() + 1);
-
-  const [endDate, setEndDate] = useState(
-    new Date(tmp).toISOString().split(":", 2).join(":")
-  );
-
-  console.log("Start: " + startDate);
-  console.log("End: " + endDate);
-
-  return (
-    <Sheet>
-      <SheetTrigger>Open</SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Create new Event</SheetTitle>
-          <SheetDescription>
-            Create a new event with all the details here.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" placeholder="Title" />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" placeholder="Description" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              <div>
-                <Label htmlFor="startDate">Start</Label>
-                <Input
-                  id="startDate"
-                  type="datetime-local"
-                  value={startDate}
-                  onChange={(e) => {
-                    console.log(e.target.value);
-                    let startTs = e.target.valueAsDate;
-                    let endTs = e.target.valueAsDate;
-                    if (!startTs) {
-                      startTs = new Date();
-                    }
-                    if (!endTs) {
-                      endTs = new Date();
-                    }
-                    endTs.setHours(endTs.getHours() + 1);
-                    setStartDate(startTs.toISOString().split(":", 2).join(":"));
-                    setEndDate(endTs.toISOString().split(":", 2).join(":"));
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endDate">End</Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  defaultValue={endDate}
-                  value={endDate}
-                />
-              </div>
-              <div>
-                <Label htmlFor="meetDate">Meet</Label>
-                <Input id="meetDate" type="datetime-local" />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" placeholder="Location" />
-            </div>
-
-            <div>
-              <Label htmlFor="tags">Tags</Label>
-              <ScrollArea className="h-72 w-48 rounded-md border" id="tags">
-                <div className="p-4">
-                  <div className="grid max-w-sm grid-cols-1 justify-center gap-2">
-                    <Button variant="outline">Tag 1</Button>
-                    <Button variant="outline">Tag 2</Button>
-                    <Button variant="outline">Tag 3</Button>
-                    <Button variant="outline">Tag 4</Button>
-                  </div>
-                </div>
-              </ScrollArea>
-            </div>
-          </div>
-        </div>
-        <SheetFooter>
-          <Button type="submit">Save changes</Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
+export type FormEvent = {
+  title: string;
+  description: string;
+  timespan: string;
+  meetingTime: string;
+  location: string;
+  visible: boolean;
+  authors: string[];
+  groups: string[];
+  roles: string[];
+  musicSheets: string[];
+  posts: number;
+  participants: number;
 };
 
-const Home: NextPage = () => {
-  const { user, isSignedIn } = useUser();
-  if (!isSignedIn) {
-    return <div></div>;
+const NewAdminEventPage: NextPage = () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const columns: ColumnDef<Event>[] = [
+    {
+      header: "Title",
+      accessorKey: "title",
+    },
+    {
+      header: "Description",
+      accessorKey: "description",
+    },
+    {
+      header: "Timespan",
+      accessorKey: "timespan",
+    },
+    {
+      header: "Meeting Time",
+      accessorKey: "meetingTime",
+    },
+    {
+      header: "Location",
+      accessorKey: "location",
+    },
+    {
+      header: "Visible",
+      accessorKey: "visible",
+      cell: ({ row }) => {
+        const visible: boolean = row.getValue("visible");
+        if (visible === true) {
+          return (
+            <div
+              className="text-center hover:cursor-pointer"
+              onClick={() => {
+                toast.success("Event is now invisible");
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="h-6 w-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+          );
+        } else {
+          return (
+            <div className="text-center hover:cursor-pointer">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="h-6 w-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                />
+              </svg>
+            </div>
+          );
+        }
+      },
+    },
+    {
+      header: "Authors",
+      accessorKey: "authors",
+      cell: ({ row }) => {
+        const authors: string[] = row.getValue("authors");
+        return (
+          <div>
+            {authors.map((author) => {
+              return <UserNameHover key={author} displayName={author} />;
+            })}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Groups",
+      accessorKey: "groups",
+    },
+    {
+      header: "Roles",
+      accessorKey: "roles",
+      cell: ({ row }) => {
+        const roles: string[] = row.getValue("roles");
+        return (
+          <div>
+            {roles.map((role) => {
+              return (
+                <Tag
+                  key={role + row.index.toString()}
+                  type="role"
+                  message={role.replace(
+                    /(\w)(\w*)/g,
+                    function (g0, g1: string, g2: string) {
+                      return g1.toUpperCase() + g2.toLowerCase();
+                    }
+                  )}
+                  role={role}
+                />
+              );
+            })}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Music Sheets",
+      accessorKey: "musicSheets",
+    },
+    {
+      header: "Posts",
+      accessorKey: "posts",
+    },
+    {
+      header: "Participants",
+      accessorKey: "participants",
+    },
+    {
+      header: "",
+      accessorKey: "actions",
+      cell: ({ row }) => {
+        const event: Event = row.original;
+
+        return (
+          <Dialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DialogTrigger asChild>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setDialogOpen(true);
+                    }}
+                  >
+                    Update Event
+                  </DropdownMenuItem>
+                </DialogTrigger>
+                <DialogContent>
+                  <UpdateEventForm event={event} />
+                </DialogContent>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>View customer</DropdownMenuItem>
+                <DropdownMenuItem>View payment details</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Dialog>
+        );
+      },
+    },
+  ];
+
+  //query for all events
+  const allEventsQuery = api.event.getAllEvents.useQuery();
+  if (allEventsQuery.isLoading) {
+    return <LoadingPage />;
   }
 
-  const { data } = api.event.getAll.useQuery();
-  console.log(data);
+  if (!allEventsQuery.data) {
+    toast.error("Error while fetching Events");
+  }
+  const events = allEventsQuery.data;
+  if (!events) return <div>No Events</div>;
+
+  //create useful data for table
+  const data: FormEvent[] = [];
+
+  events.map((event) => {
+    data.push({
+      title: event.title,
+      description: event.description ? event.description : "",
+      timespan:
+        event.startAt.toDateString() === event.endAt.toDateString()
+          ? new Date(event.startAt).toLocaleString() +
+            " - " +
+            new Date(event.endAt).toLocaleTimeString()
+          : new Date(event.startAt).toLocaleString() +
+            " - " +
+            new Date(event.endAt).toLocaleString(),
+      meetingTime: event.meetAt
+        ? event.meetAt.toDateString() === event.startAt.toDateString()
+          ? new Date(event.meetAt).toLocaleTimeString()
+          : new Date(event.meetAt).toLocaleString()
+        : "",
+      location: event.location ? event.location : "",
+      visible: event.visible,
+      authors: event.users.map((user) => {
+        return user.user.displayName;
+      }),
+      groups: event.userGroups.map((group) => {
+        return group.name;
+      }),
+      roles:
+        event.lowestVisibleRole === "GUEST"
+          ? ["GUEST"]
+          : event.lowestVisibleRole === "MEMBER"
+          ? ["GUEST", "MEMBER"]
+          : ["GUEST", "MEMBER", "ADMIN"],
+      musicSheets: event.musicSheets
+        ? event.musicSheets.map((sheet) => {
+            return sheet.name;
+          })
+        : [],
+      posts: event.relatedPosts.length,
+      participants: event.users.length,
+    });
+  });
 
   return (
-    <>
-      <Head>
-        <title>Create T3 App</title>
-        <meta name="description" content="Generated by create-t3-app" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <div className="h-screen">
-        <Navbar />
-        <main className="flex h-full max-h-full justify-center">
-          <div className="flex h-full w-full justify-center border-x border-slate-400 md:max-w-3xl">
-            <div>
-              {isSignedIn && <CreateEventWizard />}
-              {data?.map((event) => (
-                <div key={event.id} className="text-white ">
-                  <h1>{event.title}</h1>
-                  <h3>
-                    From {new Date(event.start).toLocaleString()} to{" "}
-                    {new Date(event.end).toLocaleString()}
-                  </h3>
-                  <p>{event.description}</p>
-                </div>
-              ))}
+    <DataTable
+      columns={columns}
+      data={data}
+      dialogOpen={dialogOpen}
+      setDialogOpen={setDialogOpen}
+    />
+  );
+};
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  dialogOpen: boolean;
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+function DataTable<TData, TValue>({
+  columns,
+  data,
+  dialogOpen,
+  setDialogOpen,
+}: DataTableProps<TData, TValue>) {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <div className="mt-3 flex  flex-col justify-evenly gap-1">
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setDialogOpen(true);
+          } else {
+            setDialogOpen(false);
+          }
+        }}
+      >
+        <DialogTrigger asChild>
+          <Button className="flex w-fit justify-items-end justify-self-end text-right">
+            <div className="flex flex-row gap-1">
+              <PlusIcon className="h-5 w-5" />
+              New
             </div>
-          </div>
-        </main>
+          </Button>
+        </DialogTrigger>
+        <DialogContent
+          className="min-w-fit"
+          onSubmit={() => {
+            console.log("submit");
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Create Event</DialogTitle>
+            <DialogDescription>Create a new event.</DialogDescription>
+          </DialogHeader>
+          <CreateEventForm />
+        </DialogContent>
+      </Dialog>
+      <div className="max-w-screen-xl rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
+    </div>
+  );
+}
+
+const EventPage: NextPage = () => {
+  return (
+    <>
+      <Navbar />
+      <main className="max-w-screen-2xl">
+        <div className="flex justify-center">
+          <div className="">
+            <NewAdminEventPage />
+          </div>
+        </div>
+      </main>
     </>
   );
 };
 
-export default Home;
+export default EventPage;
