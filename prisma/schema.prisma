@@ -50,8 +50,18 @@ enum EventUserRelation {
 }
 
 enum NotificationType {
-    EVENT
+    EVENT_REVIEW
+    EVENT_REVIEWED
+    EVENT_INVITE
+    EVENT_REMINDER
+    EVENT_REJECTED
     POST
+}
+
+enum ReviewStatus {
+    PENDING
+    APPROVED
+    REJECTED
 }
 
 model User {
@@ -152,14 +162,16 @@ model UserNotification {
     createdAt    DateTime         @default(now())
     updatedAt    DateTime         @updatedAt
     title        String
+    userClerkId  String
+    read         Boolean          @default(false)
+    User         User             @relation(fields: [userClerkId], references: [clerkId])
     content      String
-    users        User[]
     type         NotificationType
     link         String?
     relatedEvent Event?           @relation(fields: [eventId], references: [id])
-    eventId      String?          @unique
+    eventId      String?
     relatedPost  Post?            @relation(fields: [postId], references: [id])
-    postId       String?          @unique
+    postId       String?
 }
 
 model Event {
@@ -169,8 +181,7 @@ model Event {
     visible           Boolean            @default(true)
     visibleToGroups   UserGroup[]        @relation("eventVisibleTo")
     lowestVisibleRole UserRole
-    needsReview       Boolean            @default(false)
-    approved          Boolean            @default(false)
+    review            ReviewStatus       @default(PENDING)
     title             String
     startAt           DateTime
     endAt             DateTime
