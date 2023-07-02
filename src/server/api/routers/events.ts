@@ -7,13 +7,13 @@ import {
   memberProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { UserRole, NotificationType } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
 export const eventRouter = createTRPCRouter({
   getReviewEvents: adminProcedure.query(({ ctx }) => {
     return ctx.prisma.event.findMany({
-      where: { needsReview: true, approved: false },
+      where: { review: "PENDING" },
     });
   }),
 
@@ -27,25 +27,127 @@ export const eventRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
       }
 
-      if (!event.needsReview) {
+      if (event.review === "APPROVED") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Event does not need review",
+          message: "Event is already approved",
+        });
+      } else if (event.review === "REJECTED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Event got rejected",
         });
       } else {
-        if (event.approved) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Event already approved",
-          });
-        } else {
-          return event;
-        }
+        return event;
       }
+    }),
+
+  setVisible: memberProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const event = await ctx.prisma.event.findUnique({
+        where: { id: input.id },
+        include: { users: true },
+      });
+      const user = await ctx.prisma.user.findUnique({
+        where: { clerkId: ctx.userId },
+      });
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+      }
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      if (event.review !== "APPROVED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Event is not approved",
+        });
+      }
+
+      //check if user is admin or author
+      //get all authors
+      const authors = event.users.filter((user) => user.relation === "AUTHOR");
+      //check if user is admin
+      if (user.role === UserRole.ADMIN) {
+        //set visible
+        const updatedEvent = await ctx.prisma.event.update({
+          where: { id: input.id },
+          data: { visible: true },
+        });
+        return updatedEvent;
+      }
+      //check if user is author
+      else if (authors.some((author) => author.userClerkId === user.clerkId)) {
+        //set visible
+        const updatedEvent = await ctx.prisma.event.update({
+          where: { id: input.id },
+          data: { visible: true },
+        });
+        return updatedEvent;
+      }
+
+      //if not admin or author, throw error
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User is not admin or author",
+      });
+    }),
+
+  setInvisible: memberProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const event = await ctx.prisma.event.findUnique({
+        where: { id: input.id },
+        include: { users: true },
+      });
+      const user = await ctx.prisma.user.findUnique({
+        where: { clerkId: ctx.userId },
+      });
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+      }
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      //check if user is admin or author
+      //get all authors
+      const authors = event.users.filter((user) => user.relation === "AUTHOR");
+      //check if user is admin
+      if (user.role === UserRole.ADMIN) {
+        //set invisible
+        const updatedEvent = await ctx.prisma.event.update({
+          where: { id: input.id },
+          data: { visible: false },
+        });
+        return updatedEvent;
+      }
+      //check if user is author
+      else if (authors.some((author) => author.userClerkId === user.clerkId)) {
+        //set invisible
+        const updatedEvent = await ctx.prisma.event.update({
+          where: { id: input.id },
+          data: { visible: false },
+        });
+        return updatedEvent;
+      }
+
+      //if not admin or author, throw error
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User is not admin or author",
+      });
     }),
 
   approveEvent: adminProcedure
     .input(z.object({ id: z.string() }))
+    .output(z.object({ id: z.string(), review: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const event = await ctx.prisma.event.findUnique({
         where: { id: input.id },
@@ -53,25 +155,10 @@ export const eventRouter = createTRPCRouter({
       if (!event) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
       }
-      if (!event.needsReview) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Event does not need review",
-        });
-      } else {
-        if (event.approved) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Event already approved",
-          });
-        } else {
-          const updatedEvent = await ctx.prisma.event.update({
-            where: { id: input.id },
-            data: { approved: true },
-          });
-          return updatedEvent;
-        }
-      }
+      return await ctx.prisma.event.update({
+        where: { id: input.id },
+        data: { review: "APPROVED" },
+      });
     }),
 
   rejectEvent: adminProcedure
@@ -79,29 +166,30 @@ export const eventRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const event = await ctx.prisma.event.findUnique({
         where: { id: input.id },
+        include: { users: true },
       });
       if (!event) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
       }
-      if (!event.needsReview) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Event does not need review",
-        });
-      } else {
-        if (!event.approved) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Event already rejected",
-          });
-        } else {
-          const updatedEvent = await ctx.prisma.event.update({
-            where: { id: input.id },
-            data: { approved: false },
-          });
-          return updatedEvent;
-        }
-      }
+
+      //create notification for author(s)
+      const authors = event.users.filter((user) => user.relation === "AUTHOR");
+      const authorIds = authors.map((author) => author.userClerkId);
+
+      await ctx.prisma.userNotification.createMany({
+        data: authorIds.map((authorId) => ({
+          userClerkId: authorId,
+          eventId: event.id,
+          title: "Event Rejected",
+          content: `Your event ${event.title} has been rejected`,
+          type: "EVENT_REJECTED",
+        })),
+      });
+
+      return await ctx.prisma.event.update({
+        where: { id: input.id },
+        data: { review: "REJECTED", visible: false },
+      });
     }),
 
   getEventAuthor: publicProcedure
@@ -475,7 +563,7 @@ export const eventRouter = createTRPCRouter({
           title: input.title,
           description: input.description,
           location: input.location,
-          needsReview: user.role === UserRole.MEMBER, //if user is member, the event needs to be reviewed by an admin
+          review: user.role === UserRole.MEMBER ? "PENDING" : "APPROVED", //if user is member, the event needs to be reviewed by an admin
           startAt: input.startAt,
           endAt: input.endAt,
           meetAt: input.meetAt,
@@ -609,24 +697,22 @@ export const eventRouter = createTRPCRouter({
         });
       }
 
-      if (event.needsReview) {
+      if (event.review === "PENDING") {
         //send notification to admins
         const admins = await ctx.prisma.user.findMany({
           where: { role: UserRole.ADMIN },
           select: { clerkId: true },
         });
         if (admins) {
-          await ctx.prisma.userNotification.create({
-            data: {
-              title: "Neues Event",
-              content: `${user.displayName} hat ein neues Event erstellt: ${event.title}`,
-              users: {
-                connect: admins.map((admin) => ({ clerkId: admin.clerkId })),
-              },
-              link: `/events/${event.id}`,
-              type: NotificationType.EVENT,
-              relatedEvent: { connect: { id: event.id } },
-            },
+          await ctx.prisma.userNotification.createMany({
+            data: admins.map((admin) => ({
+              userClerkId: admin.clerkId,
+              eventId: event.id,
+              title: "New Event",
+              content: `${user.displayName} has created a new event`,
+              type: "EVENT_REVIEW",
+            })),
+            skipDuplicates: true,
           });
         }
       }
@@ -704,8 +790,7 @@ export const eventRouter = createTRPCRouter({
           description: input.description,
           location: input.location,
           startAt: input.startAt,
-          needsReview: user.role === UserRole.MEMBER,
-          approved: false, //Event needs to be reviewed again
+          review: user.role === UserRole.MEMBER ? "PENDING" : "APPROVED", //Event needs to be reviewed again
           endAt: input.endAt,
           meetAt: input.meetAt,
           notifyAt: input.notifyAt,
@@ -818,7 +903,7 @@ export const eventRouter = createTRPCRouter({
         });
       }
 
-      if (event.needsReview) {
+      if (event.review === "PENDING") {
         //send notification to admins
         const admins = await ctx.prisma.user.findMany({
           where: { role: UserRole.ADMIN },
@@ -830,17 +915,13 @@ export const eventRouter = createTRPCRouter({
             message: "Admins not found",
           });
         }
-        await ctx.prisma.userNotification.create({
-          data: {
-            users: {
-              connect: admins.map((admin) => ({ clerkId: admin.clerkId })),
-            },
-            type: NotificationType.EVENT,
-            title: "Neues Event",
-            content: `${user.displayName} hat ein neues Event erstellt: ${event.title}`,
-            link: `/events/${event.id}`,
-            relatedEvent: { connect: { id: event.id } },
-          },
+        await ctx.prisma.userNotification.createMany({
+          data: admins.map((admin) => ({
+            userClerkId: admin.clerkId,
+            title: "Event Updated",
+            content: `The event ${event.title} has been updated and needs to be reviewed again`,
+            type: "EVENT_REVIEW",
+          })),
         });
       }
 
@@ -894,10 +975,11 @@ export const eventRouter = createTRPCRouter({
           message: "User is not author",
         });
       }
-
-      //delete event
-      await ctx.prisma.event.delete({
-        where: { id: event.id },
+      //delete Notifications
+      await ctx.prisma.userNotification.deleteMany({
+        where: {
+          relatedEvent: { id: event.id },
+        },
       });
 
       //delete eventUsers
@@ -905,11 +987,9 @@ export const eventRouter = createTRPCRouter({
         where: { eventId: event.id },
       });
 
-      //delete Notifications
-      await ctx.prisma.userNotification.delete({
-        where: {
-          eventId: event.id,
-        },
+      //delete event
+      await ctx.prisma.event.delete({
+        where: { id: event.id },
       });
 
       return event;

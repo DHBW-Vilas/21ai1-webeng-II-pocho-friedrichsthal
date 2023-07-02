@@ -595,7 +595,7 @@ const UpdateUserInfo = () => {
         <div className="flex h-full justify-center">
           <div className="h-full w-1/3 min-w-fit">
             <div className="relative rounded-md border-2 border-slate-400 bg-slate-200 bg-opacity-20 dark:border-slate-500">
-              <Link href="/userSync" className="left-4w absolute top-2">
+              <Link href="/dashboard" className="left-4w absolute top-2">
                 <Button>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

@@ -5,39 +5,39 @@ import { toast } from "react-hot-toast";
 import Navbar from "@/src/components/navbar";
 import { type Event } from "@prisma/client";
 import {
-  type ColumnDef,
-  getCoreRowModel,
-  useReactTable,
-  flexRender,
+    type ColumnDef,
+    getCoreRowModel,
+    useReactTable,
+    flexRender,
 } from "@tanstack/react-table";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "~/components/ui/table";
 import { UserNameHover } from "@/src/components/usernameHover";
 import { Tag } from "@/src/components/tag";
 import { Button } from "@/src/components/ui/button";
 import { MoreHorizontal, PlusIcon } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/src/components/ui/dialog";
 import { CreateEventForm } from "./create";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
 import { useState } from "react";
 import { UpdateEventForm } from "./[eventId]/update";

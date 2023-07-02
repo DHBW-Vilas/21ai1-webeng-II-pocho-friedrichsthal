@@ -73,10 +73,7 @@ const RegisterPage: NextPage = () => {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 Object.keys(Instrument).map((key) => {
                   return (
-                    <option
-                      key={key.toString()}
-                      value={key.toString().toLocaleLowerCase()}
-                    >
+                    <option key={key.toString()} value={key.toString()}>
                       {key}
                     </option>
                   );
@@ -95,24 +92,6 @@ const RegisterPage: NextPage = () => {
                   primaryInstrument: instrument as Instrument,
                   imageUrl: user.profileImageUrl,
                 };
-
-                if (name == "") {
-                  if (!user.lastName) throw new Error("No last name");
-                  userObj.name = user.lastName;
-                }
-                if (firstname == "") {
-                  if (!user.firstName) throw new Error("No first name");
-                  userObj.firstname = user.firstName;
-                }
-                if (displayname == "") {
-                  if (!user.username) throw new Error("No username");
-                  userObj.displayname = user.username;
-                }
-                if (email == "") {
-                  if (!user.primaryEmailAddress?.emailAddress)
-                    throw new Error("No email");
-                  userObj.email = user.primaryEmailAddress?.emailAddress;
-                }
 
                 console.log("Creating user");
                 createUserMutation.mutate({
