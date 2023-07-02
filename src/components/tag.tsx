@@ -9,6 +9,18 @@ export const Tag = ({ ...props }) => {
       bgCol = "bg-slate-600";
     } else if (props.role === UserRole.ADMIN) {
       bgCol = "bg-slate-700";
+    } else {
+      bgCol = "bg-red-900";
+    }
+  }
+
+  if (props.type === "review") {
+    if (props.review === "PENDING") {
+      bgCol = "bg-yellow-900";
+    } else if (props.review === "APPROVED") {
+      bgCol = "bg-green-900";
+    } else if (props.review === "REJECTED") {
+      bgCol = "bg-red-900";
     }
   }
 

@@ -133,7 +133,7 @@ export const UserCard = (user: User, { ...props }) => {
   const isAdmin = props.isAdmin as boolean;
 
   return (
-    <div className="relative">
+    <Card className="relative flex h-36 w-96 justify-around gap-6 p-2 align-middle">
       <EditButton
         className={!isAdmin ? "none" : ""}
         onClick={() => {
@@ -141,19 +141,16 @@ export const UserCard = (user: User, { ...props }) => {
           router.push(`/user/update/${userState.clerkId}`);
         }}
       />
-
-      <Card className="relative flex h-36 w-96 justify-around gap-6 p-2 align-middle">
-        <Image
-          src={userState.imageUrl ? userState.imageUrl : "/default-profile.png"}
-          alt="Profile Picture"
-          className="m-auto h-20 w-20 justify-center rounded-full"
-          width={52}
-          height={52}
-        />
-        <div className="w-60">
-          <UserCardDetails {...userState} />
-        </div>
-      </Card>
-    </div>
+      <Image
+        src={userState.imageUrl ? userState.imageUrl : "/default-profile.png"}
+        alt="Profile Picture"
+        className="m-auto h-20 w-20 justify-center rounded-full"
+        width={52}
+        height={52}
+      />
+      <div className="w-60">
+        <UserCardDetails {...userState} />
+      </div>
+    </Card>
   );
 };
