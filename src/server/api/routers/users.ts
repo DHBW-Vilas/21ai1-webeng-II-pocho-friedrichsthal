@@ -28,24 +28,33 @@ export const userRouter = createTRPCRouter({
       return ctx.prisma.user.findMany();
     }
     if (currentUser.role === "MEMBER") {
-      return ctx.prisma.user.findMany({
-        select: {
-          displayName: true,
-          role: true,
-        },
-      });
+      return ctx.prisma.user.findMany();
     }
     return new TRPCError({
       code: "FORBIDDEN",
       message: "Insufficient permissions",
     });
   }),
-  getOne: memberProcedure
+  getOne: loggedinProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input, ctx }) => {
       const user = await ctx.prisma.user.findUnique({
         where: {
           clerkId: input.userId,
+        },
+      });
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      return user;
+    }),
+  getOneByDisplayName: loggedinProcedure
+    .input(z.object({ displayName: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          displayName: input.displayName,
         },
       });
       if (!user) {
@@ -143,9 +152,6 @@ export const userRouter = createTRPCRouter({
       return updatedUser;
     }),
 
-  getAllGroups: loggedinProcedure.query(async ({ ctx }) => {
-    return ctx.prisma.userGroup.findMany();
-  }),
   getGroupsOfUser: memberProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ input, ctx }) => {
@@ -173,143 +179,6 @@ export const userRouter = createTRPCRouter({
           users: {
             some: {
               clerkId: user.clerkId,
-            },
-          },
-        },
-      });
-    }),
-
-  getAllOfGroup: memberProcedure
-    .input(z.object({ groupId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const group = await ctx.prisma.userGroup.findUnique({
-        where: {
-          id: input.groupId,
-        },
-      });
-      if (!group) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
-      }
-
-      return ctx.prisma.user.findMany({
-        where: {
-          UserGroups: {
-            some: {
-              id: input.groupId,
-            },
-          },
-        },
-      });
-    }),
-  addUserToGroup: adminProcedure
-    .input(
-      z.object({
-        groupId: z.string(),
-        userId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const group = await ctx.prisma.userGroup.findUnique({
-        where: {
-          id: input.groupId,
-        },
-      });
-      if (!group) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
-      }
-
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          clerkId: input.userId,
-        },
-      });
-      if (!user) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-      }
-
-      //check if user is already in group
-      const existingUserGroup = await ctx.prisma.userGroup.findFirst({
-        where: {
-          id: input.groupId,
-          users: {
-            some: {
-              clerkId: input.userId,
-            },
-          },
-        },
-      });
-      if (existingUserGroup) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "User is already in group",
-        });
-      }
-
-      return ctx.prisma.userGroup.update({
-        where: {
-          id: input.groupId,
-        },
-        data: {
-          users: {
-            connect: {
-              clerkId: input.userId,
-            },
-          },
-        },
-      });
-    }),
-  removeUserFromGroup: adminProcedure
-    .input(
-      z.object({
-        groupId: z.string(),
-        userId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const group = await ctx.prisma.userGroup.findUnique({
-        where: {
-          id: input.groupId,
-        },
-      });
-      if (!group) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
-      }
-
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          clerkId: input.userId,
-        },
-      });
-      if (!user) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-      }
-
-      //check if user is already in group
-      const existingUserGroup = await ctx.prisma.userGroup.findFirst({
-        where: {
-          id: input.groupId,
-          users: {
-            some: {
-              clerkId: input.userId,
-            },
-          },
-        },
-      });
-      if (!existingUserGroup) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "User is not in group",
-        });
-      }
-
-      return ctx.prisma.userGroup.update({
-        where: {
-          id: input.groupId,
-        },
-        data: {
-          users: {
-            disconnect: {
-              clerkId: input.userId,
             },
           },
         },

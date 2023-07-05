@@ -27,11 +27,11 @@ Website will be deployed on a Vercel, and will be accessible via https://pocho.l
 - [x] Login (email, password aswell as third party login like Google, Github, etc.)
 - [x] Roles (guest, member, news_editor, event_editor, admin)
 - [ ] Profile (information, change pw, change avatar)
-- [ ] create event (form for creating new event)
+- [x] create event (form for creating new event)
 - [ ] create post (form for creating new post)
 - [ ] Event Overview (list of all events)
 - [ ] Post Overview (list of all posts)
-- [ ] Register (email, password, name, etc.)
+- [x] Register (email, password, name, etc.)
 
 Optional:
 

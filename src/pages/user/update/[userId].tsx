@@ -36,13 +36,13 @@ import toast from "react-hot-toast";
 const UpdateUserForm = ({ ...props }) => {
   const user = props.user as User;
   const updateUserMutation = api.user.updateUser.useMutation();
-  const addUserToGroupMutation = api.user.addUserToGroup.useMutation();
+  const addUserToGroupMutation = api.group.addUserToGroup.useMutation();
   const removeUserFromGroupMutation =
-    api.user.removeUserFromGroup.useMutation();
+    api.group.removeUserFromGroup.useMutation();
   const personalGroupsQuery = api.user.getGroupsOfUser.useQuery({
     userId: user.clerkId,
   });
-  const allGroupsQuery = api.user.getAllGroups.useQuery();
+  const allGroupsQuery = api.group.getAllGroups.useQuery();
 
   const [userState, setUser] = useState(user);
 
@@ -295,7 +295,7 @@ const UpdateUserForm = ({ ...props }) => {
                     .toString()
                 : ""
             }
-            placeholder="Startet At"
+            placeholder="YYYY-MM"
             onChange={(e) => {
               setUser({
                 ...userState,
@@ -595,7 +595,7 @@ const UpdateUserInfo = () => {
         <div className="flex h-full justify-center">
           <div className="h-full w-1/3 min-w-fit">
             <div className="relative rounded-md border-2 border-slate-400 bg-slate-200 bg-opacity-20 dark:border-slate-500">
-              <Link href="/userSync" className="absolute left-4w top-2">
+              <Link href="/dashboard" className="left-4w absolute top-2">
                 <Button>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
