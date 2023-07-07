@@ -478,7 +478,14 @@ export const eventRouter = createTRPCRouter({
                 some: { users: { some: { clerkId: ctx.userId } } },
               },
             },
+            { users: { some: { userClerkId: ctx.userId } } },
           ],
+        },
+        include: {
+          userGroups: { include: { users: true } },
+          users: { include: { user: true } },
+          musicSheets: true,
+          relatedPosts: true,
         },
       });
     } else if (user.role === UserRole.MEMBER) {
@@ -495,6 +502,12 @@ export const eventRouter = createTRPCRouter({
             },
           ],
         },
+        include: {
+          userGroups: { include: { users: true } },
+          users: { include: { user: true } },
+          musicSheets: true,
+          relatedPosts: true,
+        },
       });
     } else if (user.role === UserRole.ADMIN) {
       return ctx.prisma.event.findMany({
@@ -505,6 +518,12 @@ export const eventRouter = createTRPCRouter({
             { lowestVisibleRole: UserRole.MEMBER },
             { lowestVisibleRole: UserRole.ADMIN },
           ],
+        },
+        include: {
+          userGroups: { include: { users: true } },
+          users: { include: { user: true } },
+          musicSheets: true,
+          relatedPosts: true,
         },
       });
     }
