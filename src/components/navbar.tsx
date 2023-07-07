@@ -19,28 +19,29 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { LoadingPage } from "./loading";
 import dayjs from "dayjs";
 
-export default function Navbar() {
+function SignedInNavbar() {
   const { user, isSignedIn } = useUser();
   const router = useRouter();
   const userQuery = api.user.getSelf.useQuery();
   const notificationQuery = api.notifcation.getNotifications.useQuery();
 
-  if (notificationQuery.isError) {
+  if (notificationQuery.isError && isSignedIn) {
     toast.error("Error while fetching notifications");
     throw new Error("Error while fetching notifications");
   }
 
-  if (userQuery.isError) {
+  if (userQuery.isError && isSignedIn) {
     toast.error("Error while fetching user data");
     throw new Error("Error while fetching user data");
   }
 
-  if (!userQuery.data || !notificationQuery.data) return <LoadingPage />;
+  if ((!userQuery.data || !notificationQuery.data) && isSignedIn)
+    return <LoadingPage />;
 
   const userRole = userQuery.data?.role;
   const userNotifications = notificationQuery.data;
 
-  const unReadNotifications = userNotifications.filter(
+  const unReadNotifications = userNotifications?.filter(
     (notification) => !notification.read
   );
 
@@ -126,7 +127,7 @@ export default function Navbar() {
                   <div
                     className={
                       "absolute right-[-5px] top-2 z-50 " +
-                      (unReadNotifications.length > 0 ? "" : "hidden")
+                      (unReadNotifications!.length > 0 ? "" : "hidden")
                     }
                   >
                     <span className={"relative flex h-3 w-3"}>
@@ -153,12 +154,12 @@ export default function Navbar() {
                 </PopoverTrigger>
                 <PopoverContent>
                   <div className="flex flex-col gap-2 p-2">
-                    {userNotifications.length == 0 && (
+                    {userNotifications!.length == 0 && (
                       <span className="text-center text-slate-600">
                         No Notifications
                       </span>
                     )}
-                    {userNotifications.map((notification) => (
+                    {userNotifications!.map((notification) => (
                       <div
                         key={notification.id}
                         className="flex flex-row justify-between"
@@ -206,4 +207,74 @@ export default function Navbar() {
       </div>
     </nav>
   );
+}
+
+function SignedOutNavbar() {
+  const { user, isSignedIn } = useUser();
+  const router = useRouter();
+
+  const currentPage = router.pathname.split("/")[1];
+
+  return (
+    <nav className="h-18 sticky top-0 grid w-full grid-flow-col grid-cols-3 items-center justify-stretch bg-primary px-4">
+      <Link
+        className="flex  gap-4 justify-self-start text-2xl font-bold text-white"
+        href="/"
+      >
+        <Image
+          className="h-14 w-auto"
+          src="/PoCho_Logo-small.png"
+          width={50}
+          height={50}
+          alt="Logo"
+        />
+        <span className="text-slate-600">
+          Posaunenchor <br /> Friedrichsthal
+        </span>
+      </Link>
+      <div className="flex justify-evenly">
+        <Link
+          className={
+            "text-" + (currentPage == "" ? "accent font-bold" : "slate-100")
+          }
+          href="/"
+        >
+          Home
+        </Link>
+        <Link
+          className={
+            "text-" +
+            (currentPage == "events" ? "accent font-bold" : "slate-100")
+          }
+          href="/events"
+        >
+          Events
+        </Link>
+        <Link
+          className={
+            "text-" + (currentPage == "news" ? "accent font-bold" : "slate-100")
+          }
+          href="/news"
+        >
+          News
+        </Link>
+      </div>
+      <div className="float-right flex min-h-fit items-center justify-end align-middle">
+        {!isSignedIn && (
+          <span className="mr-4 text-white">
+            <SignInButton redirectUrl="/userSync" />
+          </span>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+export default function Navbar() {
+  const { isSignedIn } = useUser();
+
+  if (isSignedIn) {
+    return <SignedInNavbar />;
+  }
+  return <SignedOutNavbar />;
 }
