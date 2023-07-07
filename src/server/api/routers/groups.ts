@@ -144,6 +144,21 @@ export const groupRouter = createTRPCRouter({
         },
       });
     }),
+
+  getOne: loggedinProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.userGroup.findUnique({
+        where: {
+          id: input.groupId,
+        },
+        include: {
+          users: true,
+          events: true,
+        },
+      });
+    }),
+
   getAllGroups: loggedinProcedure.query(async ({ ctx }) => {
     return ctx.prisma.userGroup.findMany({
       include: {

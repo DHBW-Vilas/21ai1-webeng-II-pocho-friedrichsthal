@@ -134,8 +134,9 @@ model Post {
     visible           Boolean            @default(false)
     needsReview       Boolean            @default(true)
     approved          Boolean            @default(false)
+    draft             Boolean            @default(true)
     lowestVisibleRole UserRole
-    postImageUrl      String
+    postImageUrl      String             @default("/Pocho-Logo-bg.png")
     categories        Category[]
     relatedEvents     Event[]
     userClerkId       String

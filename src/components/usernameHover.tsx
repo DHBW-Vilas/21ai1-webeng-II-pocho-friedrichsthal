@@ -3,7 +3,7 @@ import { api } from "../utils/api";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { UserCardDetails } from "./userCard";
+import { UserCardDetails } from "./cards";
 
 export const UserNameHover = ({ ...props }) => {
   const displayName = props.displayName as string;

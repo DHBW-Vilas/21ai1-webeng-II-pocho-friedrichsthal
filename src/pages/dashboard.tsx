@@ -7,8 +7,8 @@ import Head from "next/head";
 import { type User } from "@prisma/client";
 import { LoadingPage } from "../components/loading";
 import { useState } from "react";
-import { UserCard } from "../components/userCard";
-import { EventCard } from "../components/eventCard";
+import { GroupCard, GroupDetailsCard, UserCard } from "../components/cards";
+import { EventCard } from "../components/cards";
 
 const Dashboard = () => {
   //check if user is signed in and check if role is member or admin
@@ -43,6 +43,7 @@ const AdminDashboard = () => {
   const [selectedTab, setSelectedTab] = useState<
     "users" | "posts" | "events" | "groups"
   >("users");
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const statsQuery = api.general.getStatistics.useQuery();
   const usersQuery = api.user.getAll.useQuery();
@@ -141,7 +142,7 @@ const AdminDashboard = () => {
         {selectedTab === "users" ? (
           <div className="mt-4 grid grid-flow-col justify-center gap-5">
             {users.map((user) => {
-              return <UserCard {...user} key={user.clerkId} />;
+              return <UserCard user={user} isAdmin key={user.clerkId} />;
             })}
           </div>
         ) : selectedTab === "posts" ? (
@@ -149,11 +150,38 @@ const AdminDashboard = () => {
         ) : selectedTab === "events" ? (
           <div className="mt-4 grid grid-flow-col justify-center gap-5">
             {events.map((event) => {
-              return <EventCard {...event} key={event.id} />;
+              return <EventCard event={event} isAdmin key={event.id} />;
             })}
           </div>
         ) : selectedTab === "groups" ? (
-          <div></div>
+          <>
+            <div className=" m-auto mt-4 gap-5 overflow-x-scroll rounded-md border-2 border-slate-600 bg-slate-200 p-4 sm:flex sm:max-w-screen-sm md:grid md:max-w-screen-md md:grid-flow-col lg:max-w-screen-lg">
+              {groups.map((group) => {
+                return (
+                  <div
+                    key={group.id}
+                    onClick={() => {
+                      setSelectedGroup(group.id);
+                    }}
+                  >
+                    <GroupCard
+                      group={group}
+                      selected={selectedGroup == group.id}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div>
+              {selectedGroup ? (
+                <div className="mt-4">
+                  <GroupDetailsCard groupId={selectedGroup} />
+                </div>
+              ) : (
+                <div></div>
+              )}
+            </div>
+          </>
         ) : (
           <div></div>
         )}

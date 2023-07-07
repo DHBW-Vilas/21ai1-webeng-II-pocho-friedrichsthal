@@ -154,7 +154,9 @@ export default function Navbar() {
                 <PopoverContent>
                   <div className="flex flex-col gap-2 p-2">
                     {userNotifications.length == 0 && (
-                      <span className="text-slate-600">No notifications</span>
+                      <span className="text-center text-slate-600">
+                        No Notifications
+                      </span>
                     )}
                     {userNotifications.map((notification) => (
                       <div
