@@ -18,30 +18,41 @@ import toast from "react-hot-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { LoadingPage } from "./loading";
 import dayjs from "dayjs";
+import { Button } from "./ui/button";
+import { CheckCheckIcon } from "lucide-react";
+import { useState } from "react";
+import { type UserNotification } from "@prisma/client";
 
 function SignedInNavbar() {
   const { user, isSignedIn } = useUser();
   const router = useRouter();
   const userQuery = api.user.getSelf.useQuery();
   const notificationQuery = api.notifcation.getNotifications.useQuery();
+  const readNotificationMutation =
+    api.notifcation.readNotification.useMutation();
 
-  if (notificationQuery.isError && isSignedIn) {
+  const [notifications, setNotifications] = useState<UserNotification[] | null>(
+    null
+  );
+
+  if (notificationQuery.isError) {
     toast.error("Error while fetching notifications");
     throw new Error("Error while fetching notifications");
   }
 
-  if (userQuery.isError && isSignedIn) {
+  if (userQuery.isError) {
     toast.error("Error while fetching user data");
     throw new Error("Error while fetching user data");
   }
+  if (!notifications && notificationQuery.isSuccess)
+    setNotifications(notificationQuery.data);
 
-  if ((!userQuery.data || !notificationQuery.data) && isSignedIn)
+  if (!userQuery.data || !notificationQuery.data || !notifications)
     return <LoadingPage />;
 
-  const userRole = userQuery.data?.role;
-  const userNotifications = notificationQuery.data;
+  const userRole = userQuery.data.role;
 
-  const unReadNotifications = userNotifications?.filter(
+  const unReadNotifications = notifications.filter(
     (notification) => !notification.read
   );
 
@@ -127,7 +138,7 @@ function SignedInNavbar() {
                   <div
                     className={
                       "absolute right-[-5px] top-2 z-50 " +
-                      (unReadNotifications!.length > 0 ? "" : "hidden")
+                      (unReadNotifications.length > 0 ? "" : "hidden")
                     }
                   >
                     <span className={"relative flex h-3 w-3"}>
@@ -152,27 +163,54 @@ function SignedInNavbar() {
                     </svg>
                   </div>
                 </PopoverTrigger>
-                <PopoverContent>
-                  <div className="flex flex-col gap-2 p-2">
-                    {userNotifications!.length == 0 && (
+                <PopoverContent className="w-96">
+                  <div className=" flex  flex-col gap-2 p-2">
+                    {notifications.length == 0 && (
                       <span className="text-center text-slate-600">
                         No Notifications
                       </span>
                     )}
-                    {userNotifications!.map((notification) => (
+                    {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className="flex flex-row justify-between"
+                        className="rounded-lg border-2 border-slate-200 p-2"
                       >
-                        <h3 className="text-slate-600">{notification.title}</h3>
-                        <span className="text-slate-600">
-                          {notification.content}
-                        </span>
-                        <span className="text-slate-600">
-                          {dayjs(notification.createdAt).format(
-                            "DD.MM.YYYY HH:mm"
-                          )}
-                        </span>
+                        <div className="flex justify-between">
+                          <h3 className="font-bold text-slate-600">
+                            {notification.title}
+                          </h3>
+                          <span className="text-slate-600">
+                            {dayjs(notification.createdAt).format(
+                              "DD.MM.YYYY HH:mm"
+                            )}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-row justify-between">
+                          <span className="w-64 text-slate-600">
+                            {notification.content}
+                          </span>
+
+                          <Button
+                            disabled={notification.read}
+                            className="my-auto text-accent"
+                            variant={"outline"}
+                            onClick={() => {
+                              readNotificationMutation.mutate({
+                                notificationId: notification.id,
+                              });
+                              setNotifications(
+                                notifications.map((n) => {
+                                  if (n.id == notification.id) {
+                                    n.read = true;
+                                  }
+                                  return n;
+                                })
+                              );
+                            }}
+                          >
+                            <CheckCheckIcon />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -197,7 +235,11 @@ function SignedInNavbar() {
                     <DropdownMenuItem>Profile</DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem className="w-full" asChild>
-                    <SignOutButton />
+                    <SignOutButton
+                      signOutCallback={() => {
+                        void router.reload();
+                      }}
+                    />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -210,7 +252,7 @@ function SignedInNavbar() {
 }
 
 function SignedOutNavbar() {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const router = useRouter();
 
   const currentPage = router.pathname.split("/")[1];

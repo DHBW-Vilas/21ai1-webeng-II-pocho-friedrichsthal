@@ -239,7 +239,10 @@ function DataTable<TData, TValue>({
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          disabled={user === null || user.role === "GUEST"}
+          asChild
+        >
           <Button
             className="flex w-fit justify-items-end justify-self-end text-right"
             disabled={user === null || user.role === "GUEST"}

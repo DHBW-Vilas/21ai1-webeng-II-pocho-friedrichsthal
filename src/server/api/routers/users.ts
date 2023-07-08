@@ -71,7 +71,7 @@ export const userRouter = createTRPCRouter({
       },
     });
     if (!user) {
-      return null;
+      throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
     }
 
     return user;
