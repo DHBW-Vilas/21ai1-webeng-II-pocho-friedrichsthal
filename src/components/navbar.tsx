@@ -196,7 +196,7 @@ function SignedInNavbar() {
                   <Link href={"/user"} replace>
                     <DropdownMenuItem>Profile</DropdownMenuItem>
                   </Link>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="w-full" asChild>
                     <SignOutButton />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -262,7 +262,7 @@ function SignedOutNavbar() {
       <div className="float-right flex min-h-fit items-center justify-end align-middle">
         {!isSignedIn && (
           <span className="mr-4 text-white">
-            <SignInButton redirectUrl="/userSync" />
+            <SignInButton redirectUrl={router.pathname} />
           </span>
         )}
       </div>

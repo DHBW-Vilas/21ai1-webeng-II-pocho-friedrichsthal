@@ -456,16 +456,27 @@ export const eventRouter = createTRPCRouter({
         return event;
       }
     }),
-  getAllEventsVisibleToUser: loggedinProcedure.query(async ({ ctx }) => {
+  getAllEventsVisibleToUser: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.userId) {
+      return ctx.prisma.event.findMany({
+        where: { visible: true, lowestVisibleRole: UserRole.GUEST },
+        include: {
+          userGroups: { include: { users: true } },
+          users: { include: { user: true } },
+          musicSheets: true,
+          relatedPosts: true,
+        },
+      });
+    }
+
     const user = await ctx.prisma.user.findUnique({
       where: { clerkId: ctx.userId },
     });
+
     if (!user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
+      throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
     }
+
     if (user.role === UserRole.GUEST) {
       //return all events visible to guests or groups the user is in
       return ctx.prisma.event.findMany({

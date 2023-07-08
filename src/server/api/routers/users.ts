@@ -4,6 +4,7 @@ import {
   createTRPCRouter,
   loggedinProcedure,
   memberProcedure,
+  publicProcedure,
 } from "~/server/api/trpc";
 import { z } from "zod";
 import { Instrument, UserRole } from "@prisma/client";
@@ -76,6 +77,20 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
+  getSelfPublic: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.userId) {
+      return null;
+    }
+    const user = await ctx.prisma.user.findUnique({
+      where: {
+        clerkId: ctx.userId,
+      },
+    });
+    if (!user) {
+      return null;
+    }
+    return user;
+  }),
   updateUser: adminProcedure
     .input(
       z.object({

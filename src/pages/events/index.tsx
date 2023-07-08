@@ -38,6 +38,7 @@ import {
 } from "@/src/components/ui/dropdown-menu";
 import { useState } from "react";
 import { type User } from "@prisma/client";
+import { useUser } from "@clerk/nextjs";
 
 export type FormEvent = {
   title: string;
@@ -214,16 +215,16 @@ function DataTable<TData, TValue>({
   });
 
   const [user, setUser] = useState<User | null>(null);
+  const { isSignedIn } = useUser();
 
-  const getSelfQuery = api.user.getSelf.useQuery();
-  if (getSelfQuery.isLoading) {
+  const getSelf = api.user.getSelfPublic.useQuery();
+
+  if (getSelf.isLoading) {
     return <LoadingPage />;
   }
-  if (!getSelfQuery.data) {
-    toast.error("Error while fetching user");
-  }
-  if (getSelfQuery.isSuccess && user === null) {
-    setUser(getSelfQuery.data);
+
+  if (isSignedIn && !user) {
+    setUser(getSelf.data === undefined ? null : getSelf.data);
   }
 
   return (
