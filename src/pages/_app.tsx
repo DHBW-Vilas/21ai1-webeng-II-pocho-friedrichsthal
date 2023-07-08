@@ -9,6 +9,7 @@ import {
   RedirectToSignIn,
 } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
+import Head from "next/head";
 
 const publicPages = [
   "/",
@@ -33,25 +34,31 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   // If the current route is listed as public, render it directly
   // Otherwise, use Clerk to require authentication
   return (
-    <ClerkProvider {...pageProps}>
-      {isPublicPage ? (
-        <>
-          <Toaster />
-          <Component {...pageProps} />
-        </>
-      ) : (
-        <>
-          <SignedIn>
+    <>
+      <Head>
+        <title>Posaunenchor Friedrichsthal</title>
+        <link rel="icon" href="/PoCho_Logo-small.png" />
+      </Head>
+      <ClerkProvider {...pageProps}>
+        {isPublicPage ? (
+          <>
             <Toaster />
             <Component {...pageProps} />
-          </SignedIn>
-          <SignedOut>
-            <Toaster />
-            <RedirectToSignIn />
-          </SignedOut>
-        </>
-      )}
-    </ClerkProvider>
+          </>
+        ) : (
+          <>
+            <SignedIn>
+              <Toaster />
+              <Component {...pageProps} />
+            </SignedIn>
+            <SignedOut>
+              <Toaster />
+              <RedirectToSignIn />
+            </SignedOut>
+          </>
+        )}
+      </ClerkProvider>
+    </>
   );
 };
 

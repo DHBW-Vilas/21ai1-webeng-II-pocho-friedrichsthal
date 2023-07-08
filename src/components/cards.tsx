@@ -12,6 +12,12 @@ import { type Event } from "@prisma/client";
 import dayjs from "dayjs";
 import { Button } from "./ui/button";
 import { LoadingPage } from "./loading";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "../utils/api";
+import { PostPreview } from "./postPreview";
+
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type DetailedNews = RouterOutput["post"]["getAllPostsVisibleToUser"][number];
 
 export const UserCardDetails = (userState: User) => {
   const groupsQuery = api.user.getGroupsOfUser.useQuery({
@@ -598,13 +604,28 @@ export const GroupDetailsCard = (props: { groupId: string }) => {
           ))}
         </div>
         <hr className="my-4 h-0.5 w-full rounded-lg bg-slate-600 text-slate-600" />
-        <h4 className="text-lg font-bold">Events:</h4>
+        <h4 className="text-lg font-bold">Events: ({eventCount})</h4>
         <div className="flex flex-row gap-2">
           {events.map((event) => (
             <EventCard key={event.id} event={event} reduced />
           ))}
         </div>
       </div>
+    </Card>
+  );
+};
+
+export const PostCard = (props: { post: DetailedNews; isAdmin: boolean }) => {
+  const router = useRouter();
+  return (
+    <Card className="relative m-auto justify-around gap-6 border-2 border-slate-600 bg-slate-100 p-2 align-middle  sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg">
+      <EditButton
+        className={!props.isAdmin ? "none" : ""}
+        onClick={() => {
+          void router.push(`/news/${props.post.id}/update`);
+        }}
+      />
+      <PostPreview post={props.post} orientation="picLeft" />
     </Card>
   );
 };

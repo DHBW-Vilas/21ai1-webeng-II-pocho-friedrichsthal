@@ -130,19 +130,19 @@ model Post {
     createdAt         DateTime           @default(now())
     updatedAt         DateTime           @updatedAt
     title             String
-    content           String             @db.VarChar(10000)
+    content           String             @db.Text
     visible           Boolean            @default(false)
-    needsReview       Boolean            @default(true)
-    approved          Boolean            @default(false)
+    review            ReviewStatus       @default(PENDING)
     draft             Boolean            @default(true)
     lowestVisibleRole UserRole
-    postImageUrl      String             @default("/Pocho-Logo-bg.png")
+    postImageUrl      String             @default("/Pocho_Logo.png")
     categories        Category[]
     relatedEvents     Event[]
     userClerkId       String
     author            User               @relation(fields: [userClerkId], references: [clerkId])
     mentionedUsers    User[]             @relation("relatedPosts")
     UserNotification  UserNotification[]
+    timesVisited      Int                @default(0)
 }
 
 model EventUser {

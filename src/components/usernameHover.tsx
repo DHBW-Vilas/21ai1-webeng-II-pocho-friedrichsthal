@@ -24,8 +24,10 @@ export const UserNameHover = ({ ...props }) => {
   const user = userQuery.data;
   return (
     <HoverCard>
-      <HoverCardTrigger asChild>
-        <Button variant="link">@{displayName}</Button>
+      <HoverCardTrigger className="m-0 h-auto p-0" asChild>
+        <Button variant="link" className="text-accent">
+          @{displayName}
+        </Button>
       </HoverCardTrigger>
       <HoverCardContent className="relative flex h-auto w-auto  justify-around gap-6 p-2 align-middle">
         <div

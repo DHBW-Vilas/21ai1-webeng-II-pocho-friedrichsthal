@@ -1024,4 +1024,19 @@ export const eventRouter = createTRPCRouter({
 
       return event;
     }),
+  getAllFromSelf: loggedinProcedure.query(async ({ ctx }) => {
+    const events = await ctx.prisma.event.findMany({
+      where: {
+        users: { some: { userClerkId: ctx.userId, relation: "AUTHOR" } },
+      },
+      include: {
+        category: true,
+        userGroups: { include: { users: true } },
+        users: { include: { user: true } },
+        musicSheets: true,
+        relatedPosts: true,
+      },
+    });
+    return events;
+  }),
 });

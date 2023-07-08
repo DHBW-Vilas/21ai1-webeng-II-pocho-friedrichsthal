@@ -197,6 +197,9 @@ export const userRouter = createTRPCRouter({
             },
           },
         },
+        include: {
+          users: true,
+        },
       });
     }),
 

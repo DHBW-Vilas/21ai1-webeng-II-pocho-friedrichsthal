@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="fixed bottom-0 flex w-full justify-center bg-slate-800 text-white">
+    <footer className="fixed bottom-0 mt-4 flex w-full justify-center bg-slate-800 text-white">
       <div className="flex flex-col justify-center">
         <div className="grid grid-cols-2">
           <Link href="/terms">Terms</Link>

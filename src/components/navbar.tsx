@@ -59,7 +59,7 @@ function SignedInNavbar() {
   const currentPage = router.pathname.split("/")[1];
 
   return (
-    <nav className="h-18 sticky top-0 grid w-full grid-flow-col grid-cols-3 items-center justify-stretch bg-primary px-4">
+    <nav className="h-18 sticky top-0 z-50 grid w-full grid-flow-col grid-cols-3 items-center justify-stretch bg-primary px-4">
       <Link
         className="flex  gap-4 justify-self-start text-2xl font-bold text-white"
         href="/"
