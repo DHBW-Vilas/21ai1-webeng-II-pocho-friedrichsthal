@@ -29,7 +29,7 @@ Website will be deployed on a Vercel, and will be accessible via https://pocho.l
 - [ ] Profile (information, change pw, change avatar)
 - [x] create event (form for creating new event)
 - [ ] create post (form for creating new post)
-- [ ] Event Overview (list of all events)
+- [X] Event Overview (list of all events)
 - [ ] Post Overview (list of all posts)
 - [x] Register (email, password, name, etc.)
 
@@ -38,7 +38,7 @@ Optional:
 - [ ] Introduce categories for events (including filter option)
 - [ ] Event Search
 - [ ] Event Calendar
-- [ ] Account linking (e.g. linking a Google account to the website account)
+- [X] Account linking (e.g. linking a Google account to the website account)
 - [ ] Introduce categories for posts (including filter option)
 - [ ] Post Search
 - [ ] Comments under posts
