@@ -12,10 +12,10 @@ Those pages are:
 - [x] Home (everyone)
 - [ ] About Us (everyone)
 - [ ] Games (optional - only for members)
-- [ ] Admin - Dashboard (only for admins)
-- [ ] Member - Dashboard (only for members)
-- [ ] Events (partly for members, partly for everyone)
-- [ ] News (partly for members, partly for everyone)
+- [x] Admin - Dashboard (only for admins)
+- [x] Member - Dashboard (only for members)
+- [x] Events (partly for members, partly for everyone)
+- [x] News (partly for members, partly for everyone)
 - [ ] Contact (everyone)
 - [x] Login (everyone)
 - [x] Register (everyone)
@@ -28,9 +28,9 @@ Website will be deployed on a Vercel, and will be accessible via https://pocho.l
 - [x] Roles (guest, member, news_editor, event_editor, admin)
 - [ ] Profile (information, change pw, change avatar)
 - [x] create event (form for creating new event)
-- [ ] create post (form for creating new post)
-- [X] Event Overview (list of all events)
-- [ ] Post Overview (list of all posts)
+- [x] create post (form for creating new post)
+- [x] Event Overview (list of all events)
+- [x] Post Overview (list of all posts)
 - [x] Register (email, password, name, etc.)
 
 Optional:
@@ -38,7 +38,7 @@ Optional:
 - [ ] Introduce categories for events (including filter option)
 - [ ] Event Search
 - [ ] Event Calendar
-- [X] Account linking (e.g. linking a Google account to the website account)
+- [x] Account linking (e.g. linking a Google account to the website account)
 - [ ] Introduce categories for posts (including filter option)
 - [ ] Post Search
 - [ ] Comments under posts
