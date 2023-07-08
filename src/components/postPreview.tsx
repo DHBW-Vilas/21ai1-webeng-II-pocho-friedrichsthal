@@ -5,6 +5,7 @@ import Image from "next/image";
 import { UserNameHover } from "./usernameHover";
 import { Button } from "./ui/button";
 import Link from "next/link";
+import { Tag } from "./tag";
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 type DetailedNews = RouterOutput["post"]["getAllPostsVisibleToUser"][number];
@@ -12,8 +13,9 @@ type DetailedNews = RouterOutput["post"]["getAllPostsVisibleToUser"][number];
 export const PostPreview = (props: {
   post: DetailedNews;
   orientation: "picLeft" | "picRight";
+  includeMeta?: boolean;
 }) => {
-  const { post, orientation } = props;
+  const { post, orientation, includeMeta } = props;
   const { title, content, createdAt, timesVisited } = post;
   const author = post.author;
   const date = dayjs(createdAt);
@@ -38,28 +40,61 @@ export const PostPreview = (props: {
       }`}
     >
       <div className="flex w-2/3 flex-col justify-center">
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <p className="text-sm text-gray-500">
-          {date.format("DD.MM.YYYY") == dayjs().format("DD.MM.YYYY")
-            ? "Today, at " + date.format("HH:mm")
-            : date.format("DD.MM.YYYY")}{" "}
-          by <UserNameHover displayName={author.displayName} /> | {timesVisited}{" "}
-          visits
-        </p>
-        <p className="text-sm">
-          {contentCutFinal}
-          <span
-            className={
-              content.split(" ").length <= 60 || content.length <= 600
-                ? "hidden"
-                : ""
-            }
-          >
-            <Button className="h-auto p-0 pl-2" variant={"link"} asChild>
-              <Link href={`/news/${post.id}`}>Read more</Link>
-            </Button>
-          </span>
-        </p>
+        {includeMeta && (
+          <div className="">
+            <div className="grid grid-flow-dense grid-cols-8">
+              <p className="col-span-2">Visible To:</p>
+              <p className="col-span-6">
+                <Tag
+                  type="role"
+                  role={post.visible ? post.lowestVisibleRole : "NOBODY"}
+                  message={post.visible ? post.lowestVisibleRole : "NOBODY"}
+                />
+              </p>
+            </div>
+            <div className="grid grid-flow-dense grid-cols-8">
+              <p className="col-span-2">Status:</p>
+              <p className="col-span-6">
+                <Tag
+                  type="draft"
+                  draft={post.draft}
+                  message={post.draft ? "draft" : "published"}
+                />
+              </p>
+            </div>
+            <div className="grid grid-flow-dense grid-cols-8">
+              <p className="col-span-2">Review:</p>
+              <p className="col-span-6">
+                <Tag type="review" review={post.review} message={post.review} />
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex w-2/3 flex-col justify-center">
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <p className="text-sm text-gray-500">
+            {date.format("DD.MM.YYYY") == dayjs().format("DD.MM.YYYY")
+              ? "Today, at " + date.format("HH:mm")
+              : date.format("DD.MM.YYYY")}{" "}
+            by <UserNameHover displayName={author.displayName} /> |{" "}
+            {timesVisited} visits
+          </p>
+          <p className="text-sm">
+            {contentCutFinal}
+            <span
+              className={
+                content.split(" ").length <= 60 || content.length <= 600
+                  ? "hidden"
+                  : ""
+              }
+            >
+              <Button className="h-auto p-0 pl-2" variant={"link"} asChild>
+                <Link href={`/news/${post.id}`}>Read more</Link>
+              </Button>
+            </span>
+          </p>
+        </div>
       </div>
       <div className="flex justify-center">
         <Image

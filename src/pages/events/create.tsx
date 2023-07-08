@@ -336,7 +336,7 @@ export const CreateEventForm: NextPage = () => {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue placeholder="" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>

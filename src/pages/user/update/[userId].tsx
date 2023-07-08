@@ -27,6 +27,7 @@ import { api } from "@/src/utils/api";
 
 import { useUser } from "@clerk/nextjs";
 import { type User, Instrument, UserRole } from "@prisma/client";
+import dayjs from "dayjs";
 import Head from "next/head";
 import Link from "next/link";
 import router, { useRouter } from "next/router";
@@ -208,7 +209,8 @@ const UpdateUserForm = ({ ...props }) => {
                     value={instrument}
                     disabled={
                       userState.secondaryInstrument
-                        ? userState.secondaryInstrument === instrument
+                        ? userState.secondaryInstrument === instrument &&
+                          instrument !== "NONE"
                         : false
                     }
                   >
@@ -256,7 +258,8 @@ const UpdateUserForm = ({ ...props }) => {
                     value={instrument}
                     disabled={
                       userState.secondaryInstrument
-                        ? userState.primaryInstrument === instrument
+                        ? userState.primaryInstrument === instrument &&
+                          instrument !== "NONE"
                         : false
                     }
                   >
@@ -276,30 +279,16 @@ const UpdateUserForm = ({ ...props }) => {
           <Label htmlFor="startedAt">Startet At</Label>
           <Input
             id="startedAt"
-            type="month"
+            type="date"
             defaultValue={
-              userState.startedAt &&
-              userState.startedAt.toISOString().split("T")[0]
-                ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  userState.startedAt
-                    .toISOString()
-                    .split("T")[0]!
-                    .split("-")[0]!
-                    .toString() +
-                  "-" +
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  userState.startedAt
-                    .toISOString()
-                    .split("T")[0]!
-                    .split("-")[1]!
-                    .toString()
+              userState.startedAt
+                ? dayjs(userState.startedAt).set("day", 2).format("YYYY-MM-DD")
                 : ""
             }
-            placeholder="YYYY-MM"
             onChange={(e) => {
               setUser({
                 ...userState,
-                startedAt: new Date(e.target.value),
+                startedAt: dayjs(e.target.value).toDate(),
               });
             }}
           />
@@ -592,10 +581,10 @@ const UpdateUserInfo = () => {
       </Head>
       <main>
         <Navbar />
-        <div className="flex h-full justify-center">
+        <div className="mt-4 flex h-full justify-center">
           <div className="h-full w-1/3 min-w-fit">
             <div className="relative rounded-md border-2 border-slate-400 bg-slate-200 bg-opacity-20 dark:border-slate-500">
-              <Link href="/dashboard" className="left-4w absolute top-2">
+              <Link href="/dashboard" className="absolute left-4 top-2">
                 <Button>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

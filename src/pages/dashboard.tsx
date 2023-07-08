@@ -16,6 +16,9 @@ import { EventCard } from "../components/cards";
 import Footer from "../components/footer";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../utils/api";
+import { Button } from "../components/ui/button";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
@@ -43,16 +46,16 @@ const Dashboard = () => {
 
   const role = userQuery.data.role;
 
-  if(role == "GUEST") {
+  if (role == "GUEST") {
     return (
-        <main className="h-screen">
-          <Navbar />
-          <div >
-            At the moment only members and admins can access the dashboard.
-          </div>
-          <Footer />
-        </main>
-      );
+      <main className="h-screen">
+        <Navbar />
+        <div>
+          At the moment only members and admins can access the dashboard.
+        </div>
+        <Footer />
+      </main>
+    );
   }
 
   return (
@@ -168,9 +171,17 @@ const GenericDashboard = (props: {
   groups: DetailedGroup[];
   isAdmin: boolean;
 }) => {
+  const router = useRouter();
+
   const [selectedTab, setSelectedTab] = useState<
     "users" | "posts" | "events" | "groups"
   >("users");
+
+  if (router.query.tab && router.query.tab !== selectedTab) {
+    const tab = router.query.tab as "users" | "posts" | "events" | "groups";
+    router.query.tab = undefined;
+    setSelectedTab(tab);
+  }
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const { stats, users, posts, events, groups, isAdmin } = props;
@@ -259,30 +270,47 @@ const GenericDashboard = (props: {
 
         {/* tabs */}
         {selectedTab === "users" ? (
-          <div className="mt-4 grid grid-flow-col justify-center gap-5">
-            {users.map((user) => {
-              return <UserCard user={user} isAdmin key={user.clerkId} />;
-            })}
-          </div>
-        ) : selectedTab === "posts" ? (
-          <div>
-            <div className="mt-4 flex flex-col justify-center gap-5">
-              {posts.map((post: DetailedNews) => {
+          <div className="mt-4 flex justify-center">
+            <div className="grid gap-5 sm:max-w-screen-sm sm:grid-cols-1 md:max-w-screen-md lg:max-w-screen-lg lg:grid-cols-2 ">
+              {users.map((user) => {
                 return (
-                  <div key={post.id} className="last-of-type:mb-20">
-                    <PostCard post={post} isAdmin />
+                  <div key={user.clerkId} className="">
+                    <UserCard user={user} isAdmin />
                   </div>
                 );
               })}
             </div>
           </div>
+        ) : selectedTab === "posts" ? (
+          <div>
+            <div className="mt-4 flex flex-col justify-center gap-5">
+              <Button
+                className=" m-auto -mb-2 w-full sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg"
+                asChild
+              >
+                <Link href="/news/create">Create News</Link>
+              </Button>
+              {posts.map((post: DetailedNews) => {
+                return (
+                  <div key={post.id} className="last-of-type:mb-20">
+                    <PostCard post={post} includeMeta isAdmin />
+                  </div>
+                );
+              })}
+              B
+            </div>
+          </div>
         ) : selectedTab === "events" ? (
-          <div className="mt-4 grid grid-flow-col justify-center gap-5">
-            {events.map((event: DetailedEvent) => {
-              return (
-                <EventCard event={event} isAdmin={isAdmin} key={event.id} />
-              );
-            })}
+          <div className="mt-4 flex justify-center">
+            <div className="grid gap-5 sm:max-w-screen-sm sm:grid-cols-1 md:max-w-screen-md lg:max-w-screen-lg lg:grid-cols-2 ">
+              {events.map((event: DetailedEvent) => {
+                return (
+                  <div key={event.id} className="last-of-type:mb-20">
+                    <EventCard event={event} isAdmin={isAdmin} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : selectedTab === "groups" ? (
           <>

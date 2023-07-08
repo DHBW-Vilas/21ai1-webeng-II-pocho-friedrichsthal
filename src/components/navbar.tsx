@@ -105,7 +105,7 @@ function SignedInNavbar() {
           <>
             <Link
               className={
-                "text-" +
+                " text-" +
                 (currentPage == "games" ? "accent font-bold" : "slate-100")
               }
               href="/games"
@@ -127,7 +127,7 @@ function SignedInNavbar() {
       <div className="float-right flex min-h-fit items-center justify-end align-middle">
         {!isSignedIn && (
           <span className="mr-4 text-white">
-            <SignInButton redirectUrl="/userSync" />
+            <SignInButton redirectUrl="/userSync&path=/dashboard" />
           </span>
         )}
         {!!isSignedIn && (
@@ -304,7 +304,7 @@ function SignedOutNavbar() {
       <div className="float-right flex min-h-fit items-center justify-end align-middle">
         {!isSignedIn && (
           <span className="mr-4 text-white">
-            <SignInButton redirectUrl={router.pathname} />
+            <SignInButton redirectUrl={"/userSync?path=" + router.pathname} />
           </span>
         )}
       </div>

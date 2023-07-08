@@ -10,17 +10,14 @@ const UserSync: NextPage = () => {
 
   if (isSignedIn) {
     // check if user with id user.id exists in your database
-    const userQuery = api.user.getSelf.useQuery();
+    const userQuery = api.user.isRegisterdCheck.useQuery();
+    const path = router.query.path as string;
 
     if (userQuery.isSuccess) {
-      if (!userQuery.data) {
-        //if not redirect to register page
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        router.push("/register");
+      if (userQuery.data == false) {
+        void router.push("/register&path=" + path);
       } else {
-        // if yes, redirect to user page
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        router.push("/user/");
+        void router.push("/user/");
       }
     } else {
       return (

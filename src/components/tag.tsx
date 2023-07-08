@@ -1,6 +1,12 @@
 import { UserRole } from "@prisma/client";
 
-export const Tag = ({ ...props }) => {
+export const Tag = (props: {
+  type: "role" | "review" | "draft" | "general";
+  role?: UserRole | "NOBODY";
+  draft?: boolean;
+  review?: "PENDING" | "APPROVED" | "REJECTED";
+  message: string | "PENDING" | "APPROVED" | "REJECTED";
+}) => {
   let bgCol = "bg-grey-500";
   if (props.type === "role") {
     if (props.role === UserRole.GUEST) {
@@ -24,7 +30,14 @@ export const Tag = ({ ...props }) => {
     }
   }
 
-  const message = props.message as string;
+  if (props.type === "draft") {
+    if (props.draft) {
+      bgCol = "bg-yellow-900";
+    } else {
+      bgCol = "bg-sky-900";
+    }
+  }
+  const message = props.message;
 
   return (
     <span

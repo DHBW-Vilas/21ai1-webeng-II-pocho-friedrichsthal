@@ -10,6 +10,20 @@ import { z } from "zod";
 import { Instrument, UserRole } from "@prisma/client";
 
 export const userRouter = createTRPCRouter({
+  isRegisterdCheck: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.userId) {
+      return false;
+    }
+    const user = await ctx.prisma.user.findUnique({
+      where: {
+        clerkId: ctx.userId,
+      },
+    });
+    if (!user) {
+      return false;
+    }
+    return user;
+  }),
   getAll: memberProcedure.query(async ({ ctx }) => {
     //get role of user that is logged in (ctx.userId)
     //if role is admin, return all users
@@ -207,11 +221,11 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         displayName: z.string(),
-        primaryInstrument: z.nativeEnum(Instrument),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
         email: z.string().optional(),
         imageUrl: z.string(),
+        primaryInstrument: z.nativeEnum(Instrument).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -219,12 +233,6 @@ export const userRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "displayName is required",
-        });
-      }
-      if (!input.primaryInstrument) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "primaryInstrument is required",
         });
       }
 
@@ -254,28 +262,15 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      const existingUserEmail = await ctx.prisma.user.findUnique({
-        where: {
-          email: input.email,
-        },
-      });
-      if (existingUserEmail) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "User with this email already exists",
-        });
-      }
-
       return ctx.prisma.user.create({
         data: {
           displayName: input.displayName,
           clerkId: ctx.userId,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          primaryInstrument: input.primaryInstrument,
           firstName: input.firstName || "",
           lastName: input.lastName || "",
           email: input.email || "",
           imageUrl: input.imageUrl,
+          primaryInstrument: input.primaryInstrument || "NOT_SPECIFIED",
         },
       });
     }),

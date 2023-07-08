@@ -414,6 +414,13 @@ export const eventRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const event = await ctx.prisma.event.findUnique({
         where: { id: input.id },
+        include: {
+          userGroups: { include: { users: true } },
+          users: { include: { user: true } },
+          musicSheets: true,
+          relatedPosts: true,
+          category: true,
+        },
       });
       if (!event) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
@@ -455,6 +462,51 @@ export const eventRouter = createTRPCRouter({
       } else {
         return event;
       }
+    }),
+  getOne: memberProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const event = await ctx.prisma.event.findUnique({
+        where: { id: input.id },
+        include: {
+          userGroups: { include: { users: true } },
+          users: { include: { user: true } },
+          musicSheets: true,
+          relatedPosts: true,
+          category: true,
+        },
+      });
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+      }
+
+      //check if user is author or admin
+      if (ctx.userId) {
+        const user = await ctx.prisma.user.findUnique({
+          where: { clerkId: ctx.userId },
+        });
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found",
+          });
+        }
+
+        if (
+          user.role === UserRole.ADMIN ||
+          event.users.some(
+            (eventUser) =>
+              eventUser.user.clerkId === ctx.userId &&
+              eventUser.relation == "AUTHOR"
+          )
+        ) {
+          return event;
+        }
+      }
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Not authorized to view this event",
+      });
     }),
   getAllEventsVisibleToUser: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.userId) {

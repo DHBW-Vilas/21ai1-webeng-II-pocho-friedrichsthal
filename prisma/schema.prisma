@@ -35,6 +35,8 @@ enum Instrument {
     EUPHONIUM
     FLUGELHORN
     CORNET
+    NONE
+    NOT_SPECIFIED
 }
 
 enum EventUserStatus {
@@ -69,11 +71,11 @@ model User {
     displayName         String             @unique
     firstName           String?
     lastName            String?
-    email               String?            @unique
-    imageUrl            String?
+    email               String?
+    imageUrl            String
     startedAt           DateTime?
-    primaryInstrument   Instrument
-    secondaryInstrument Instrument?
+    primaryInstrument   Instrument         @default(NOT_SPECIFIED)
+    secondaryInstrument Instrument         @default(NOT_SPECIFIED)
     role                UserRole           @default(GUEST)
     UserGroups          UserGroup[]
     createdPosts        Post[]
@@ -114,6 +116,8 @@ model MusicSheet {
     url       String?
     events    Event[]
     bookId    String?
+
+    @@index([bookId])
 }
 
 model Book {
@@ -143,6 +147,8 @@ model Post {
     mentionedUsers    User[]             @relation("relatedPosts")
     UserNotification  UserNotification[]
     timesVisited      Int                @default(0)
+
+    @@index([userClerkId])
 }
 
 model EventUser {
@@ -156,6 +162,9 @@ model EventUser {
     user        User              @relation(fields: [userClerkId], references: [clerkId])
     eventId     String
     userClerkId String
+
+    @@index([eventId])
+    @@index([userClerkId])
 }
 
 model UserNotification {
@@ -173,6 +182,10 @@ model UserNotification {
     eventId      String?
     relatedPost  Post?            @relation(fields: [postId], references: [id])
     postId       String?
+
+    @@index([userClerkId])
+    @@index([eventId])
+    @@index([postId])
 }
 
 model Event {
@@ -197,4 +210,6 @@ model Event {
     users             EventUser[]
     UserNotification  UserNotification[]
     categoryId        String?
+
+    @@index([categoryId])
 }

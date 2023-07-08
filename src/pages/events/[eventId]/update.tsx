@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/src/utils/api";
+import { type AppRouter, api } from "@/src/utils/api";
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
@@ -43,8 +43,18 @@ import {
   CommandItem,
 } from "@/src/components/ui/command";
 import { useState } from "react";
+import { type inferRouterOutputs } from "@trpc/server";
+import { LoadingPage } from "@/src/components/loading";
+import Head from "next/head";
+import Navbar from "@/src/components/navbar";
+import Footer from "@/src/components/footer";
+import Link from "next/link";
+
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type DetailedEvent = RouterOutput["event"]["getAllEvents"][number];
 
 const formSchema = z.object({
+  id: z.string(),
   title: z.string(),
   description: z.string().max(2500).optional(),
   location: z.string().optional(),
@@ -61,7 +71,8 @@ const formSchema = z.object({
   usersNeeded: z.array(z.string()).optional(), //User Ids
 });
 
-export const UpdateEventForm = (event: Event) => {
+export const UpdateEventForm = (props: { event: DetailedEvent }) => {
+  const { event } = props;
   const eventMutation = api.event.updateEvent.useMutation();
   const userQuery = api.user.getSelf.useQuery();
   const router = useRouter();
@@ -73,6 +84,7 @@ export const UpdateEventForm = (event: Event) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: event.id,
       title: event.title,
       startAt: event.startAt,
       endAt: event.endAt,
@@ -80,7 +92,6 @@ export const UpdateEventForm = (event: Event) => {
       description: event.description ? event.description : undefined,
       location: event.location ? event.location : undefined,
       meetAt: event.meetAt ? event.meetAt : undefined,
-      categoryId: event.categoryId ? event.categoryId : undefined,
     },
   });
 
@@ -493,3 +504,57 @@ export const UpdateEventForm = (event: Event) => {
     </Form>
   );
 };
+
+const UpdateEventPage = () => {
+  const router = useRouter();
+  const { eventId } = router.query;
+
+  const getEventQuery = api.event.getOne.useQuery({
+    id: eventId as string,
+  });
+
+  if (!getEventQuery.data) return <LoadingPage />;
+  if (getEventQuery.isError) {
+    toast.error(getEventQuery.error.message);
+    return <LoadingPage />;
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Update Event</title>
+      </Head>
+      <main>
+        <Navbar />
+        <main className="my-auto h-screen">
+          <div className="relative m-auto flex flex-col justify-center rounded-lg border-2 border-slate-700 p-4 lg:max-w-screen-lg">
+            <h1 className="text-center text-3xl font-bold">Update Event</h1>
+            <Link href="/dashboard" className="absolute left-4 top-2 z-30">
+              <Button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="m-auto mr-2 h-4 w-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                  />
+                </svg>
+                Back
+              </Button>
+            </Link>
+            <UpdateEventForm event={getEventQuery.data} />
+          </div>
+        </main>
+        <Footer />
+      </main>
+    </>
+  );
+};
+
+export default UpdateEventPage;
