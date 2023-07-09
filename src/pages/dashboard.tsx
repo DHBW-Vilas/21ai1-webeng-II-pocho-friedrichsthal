@@ -19,6 +19,16 @@ import type { AppRouter } from "../utils/api";
 import { Button } from "../components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+  DialogDescription,
+} from "../components/ui/dialog";
+import { PlusIcon } from "lucide-react";
+import CreateGroupForm from "../components/createGroupForm";
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
@@ -173,6 +183,8 @@ const GenericDashboard = (props: {
 }) => {
   const router = useRouter();
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const [selectedTab, setSelectedTab] = useState<
     "users" | "posts" | "events" | "groups"
   >("users");
@@ -314,6 +326,34 @@ const GenericDashboard = (props: {
           </div>
         ) : selectedTab === "groups" ? (
           <>
+            {isAdmin && (
+              <Dialog
+                open={dialogOpen}
+                onOpenChange={(open) => {
+                  if (open) {
+                    setDialogOpen(true);
+                  } else {
+                    setDialogOpen(false);
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button className="m-auto -mb-2 mt-4 w-full sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg">
+                    <div className="flex flex-row gap-1">
+                      <PlusIcon className="h-5 w-5" />
+                      New Group
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="min-w-fit">
+                  <DialogHeader>
+                    <DialogTitle>Create Group</DialogTitle>
+                    <DialogDescription>Create a new group.</DialogDescription>
+                  </DialogHeader>
+                  <CreateGroupForm setDialogOpen={setDialogOpen} />
+                </DialogContent>
+              </Dialog>
+            )}
             <div className=" m-auto mt-4 gap-5 overflow-x-scroll rounded-md border-2 border-slate-600 bg-slate-200 p-4 sm:flex sm:max-w-screen-sm md:grid md:max-w-screen-md md:grid-flow-col lg:max-w-screen-lg">
               {groups.map((group) => {
                 return (

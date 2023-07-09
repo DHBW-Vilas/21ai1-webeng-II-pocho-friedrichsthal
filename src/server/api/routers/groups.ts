@@ -163,7 +163,44 @@ export const groupRouter = createTRPCRouter({
     return ctx.prisma.userGroup.findMany({
       include: {
         users: true,
+        events: true,
       },
     });
   }),
+
+  createGroup: adminProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        description: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.userGroup.create({
+        data: {
+          name: input.name,
+          description: input.description,
+        },
+      });
+    }),
+
+  updateGroup: adminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        name: z.string(),
+        description: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.userGroup.update({
+        where: {
+          id: input.groupId,
+        },
+        data: {
+          name: input.name,
+          description: input.description,
+        },
+      });
+    }),
 });

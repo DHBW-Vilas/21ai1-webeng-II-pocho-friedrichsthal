@@ -12,7 +12,13 @@ const Footer = () => {
         </div>
 
         <div className="flex justify-center">
-          <p className="text-center">© 2023 Lehdev</p>
+          <Link
+            href="
+            https://www.github.com/nichtLehdev"
+            target="_blank"
+          >
+            <p className="text-center">© 2023 Lehdev</p>
+          </Link>
         </div>
       </div>
     </footer>

@@ -32,11 +32,13 @@ DATABASE_URL=<YOUR_PLANETSCALE_DATABASE_URL>
 
 ## Gitpod
 
-    [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/DHBW-Vilas/21ai1-webeng-II-pocho-friedrichsthal)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/DHBW-Vilas/21ai1-webeng-II-pocho-friedrichsthal)
 
 ### Necessary Actions
 
 #### .env availabe
+
+@bigmars86 please use the `.env` file provided in the zip-file in the submission on Moodle. It contains the necessary credentials for the development database and Clerk.
 
 1. Copy the `.env` file into the root directory
 
@@ -51,6 +53,44 @@ CLERK_SECRET_KEY=<YOUR_CLERK_SECRET_KEY>
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<YOUR_CLERK_PUBLISHABLE_KEY>
 DATABASE_URL=<YOUR_PLANETSCALE_DATABASE_URL>
 ```
+
+### Start the Server
+
+If the `.env` file is available at Gitpod start, the server will start automatically. If not, run `npm run dev` in the terminal after setting `.env` file.
+
+## Functions
+
+- [x] Login (email, password aswell as third party login like Google, Github, etc.)
+- [x] Roles (guest, member, admin)
+- [x] create event (form for creating new event)
+- [x] create post (form for creating new post)
+- [x] Event Overview (list of all events)
+- [x] Post Overview (list of all posts)
+- [x] Register (email, password, name, etc.)
+- [x] Account linking (e.g. linking a Google account to the website account)
+- [x] Admin Dashboard (overview of all users, events, posts, etc.)
+- [x] Admin User Management (edit user roles, delete users, etc.)
+- [x] Admin Event Management (edit events, delete events, etc.)
+- [x] Admin Post Management (edit posts, delete posts, etc.)
+- [x] Member Dashboard (overview of all events, posts, etc. of an user)
+- [x] Member Event Management (edit events, delete events, etc.)
+- [x] Member Post Management (edit posts, delete posts, etc.)
+- [x] Member Profile Management (edit profile)
+
+### Not implemented
+
+- Games (not enough time, optional task)
+- Profile Management (not enough time, difficulties with Clerk)
+- Introduce categories for events (including filter option) (optional task)
+- Event Search (optional task)
+- Event Calendar (optional task)
+- Introduce categories for posts (including filter option) (optional task)
+- Post Search (optional task)
+- Comments under posts (optional task)
+
+## Known Bugs
+
+- Notifications are not implemented completely
 
 ## Contributors
 
