@@ -145,22 +145,6 @@ export const userRouter = createTRPCRouter({
         }
       }
 
-      //check if user already exists (email)
-      if (input.email) {
-        const existingUserEmail = await ctx.prisma.user.findUnique({
-          where: {
-            email: input.email,
-          },
-        });
-
-        if (existingUserEmail && existingUserEmail.clerkId !== input.clerkId) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "User with email already exists",
-          });
-        }
-      }
-
       const updatedUser = await ctx.prisma.user.update({
         where: {
           clerkId: input.clerkId,
@@ -213,6 +197,7 @@ export const userRouter = createTRPCRouter({
         },
         include: {
           users: true,
+          events: true,
         },
       });
     }),

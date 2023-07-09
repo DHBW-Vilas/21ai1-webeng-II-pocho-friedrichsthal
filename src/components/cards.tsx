@@ -15,9 +15,19 @@ import { LoadingPage } from "./loading";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../utils/api";
 import { PostPreview } from "./postPreview";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { UpdateGroupForm } from "./createGroupForm";
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 type DetailedNews = RouterOutput["post"]["getAllPostsVisibleToUser"][number];
+type DetailedGroup = RouterOutput["group"]["getAllGroups"][number];
 
 export const UserCardDetails = (userState: User) => {
   const groupsQuery = api.user.getGroupsOfUser.useQuery({
@@ -521,7 +531,6 @@ export const GroupCard = (props: { group: UserGroup; selected: boolean }) => {
     return <LoadingPage />;
   }
 
-
   const participants = getGroupParticipants.data;
   const participantsCount = participants.length;
 
@@ -547,7 +556,9 @@ export const GroupDetailsCard = (props: { groupId: string }) => {
   const getSelfQuery = api.user.getSelf.useQuery();
   const getGroupQuery = api.group.getOne.useQuery({ groupId: props.groupId });
 
-  const router = useRouter();
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [groupState, setGroup] = useState<DetailedGroup>({} as DetailedGroup);
 
   if (getGroupQuery.isLoading || !getGroupQuery.data) {
     return <LoadingPage />;
@@ -573,17 +584,46 @@ export const GroupDetailsCard = (props: { groupId: string }) => {
   const eventCount = group.events.length;
   const events = group.events;
 
+  if (!groupState.id || groupState.id !== group.id) {
+    setGroup(group);
+  }
+
   return (
     <Card className="relative m-auto justify-around gap-6 border-2 border-slate-600 bg-slate-100 p-2 align-middle  sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg">
-      <EditButton
-        className={!isAdmin ? "none" : ""}
-        onClick={() => {
-          void router.push(`/groups/${group.id}/update`);
-        }}
-      />
+      {isAdmin && (
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            if (open) {
+              setDialogOpen(true);
+            } else {
+              setDialogOpen(false);
+            }
+          }}
+        >
+          <DialogTrigger asChild>
+            <EditButton className={!isAdmin ? "none" : ""} />
+          </DialogTrigger>
+          <DialogContent className="min-w-fit">
+            <DialogHeader>
+              <DialogTitle>Update Group</DialogTitle>
+              <DialogDescription>Update the group.</DialogDescription>
+            </DialogHeader>
+            <UpdateGroupForm
+              group={groupState}
+              setGroup={setGroup}
+              setDialogOpen={setDialogOpen}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
       <div></div>
       <div className="flex flex-col justify-between">
-        <h3 className="text-center text-xl font-extrabold">{group.name}</h3>
+        <h3 className="text-center text-xl font-extrabold">
+          {groupState.name}
+        </h3>
+        <p className="text-center text-sm">{groupState.description}</p>
         <h4 className="text-lg font-bold">
           Participants: ({participantsCount})
         </h4>
