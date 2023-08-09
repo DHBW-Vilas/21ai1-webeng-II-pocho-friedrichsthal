@@ -1,10 +1,8 @@
 {
   "editor.renderWhitespace": "all",
-  "editor.rulers": [
-    106 /*140: landscape, 106: portrait (with line numbers)*/
-  ],
+  "editor.rulers": [106 /*140: landscape, 106: portrait (with line numbers)*/],
   "editor.insertSpaces": true,
   "editor.tabSize": 4,
   "editor.detectIndentation": false,
-  "workbench.colorTheme": "Default Dark+"
+  "workbench.colorTheme": "poimandres"
 }
